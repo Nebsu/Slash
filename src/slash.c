@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <math.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+
 
 #define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
 #define MAX_PATH 4096
 #define MAX_PRINTED_PATH 24
 
-char buffer[MAX_ARGS_STRLEN];
+static char *line = (char *)NULL;
 int val_retour = 0;
-// char position[MAX_PATH];
-
 
 void promptFormat() {
     char * position = "zzzzzzzzzzzzzzzzzzzzzzzzz";
@@ -43,8 +45,10 @@ int main(int argc, char ** argv) {
     }
     promptFormat();
     while(1) {
-        scanf("%s", buffer);
-        if(strcmp(buffer, "exit") == 0) {
+        line = readline ("Enter a line: ");
+        add_history (line);
+        if(strcmp(line, "exit") == 0) {
+            free(line);
             return 0;
         }
         else {
