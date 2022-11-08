@@ -18,24 +18,24 @@ void promptFormat() {
     char * position = "zzzzzzzzzzzzzzzzzzzzzzzzz";
     int taille = 0;
     if (val_retour == 0) {
-        printf("\033[32m[0]");
+        fprintf(stderr,"\033[32m[0]");
         taille += 3;
     } else {
-        printf("\033[91m[1]");
+        fprintf(stderr,"\033[91m[1]");
         taille+= 3;
     }
-    printf("\033[36m");
+    fprintf(stderr,"\033[36m");
     int taille_restant = 30 - taille - 2;
     int taille_position = strlen(position);
     if(taille_position > 25) {
         taille_restant -= 3;
-        printf("...");
+        fprintf(stderr,"...");
     }
     if(taille_position < taille_restant) {
         taille_restant = taille_position;
     }
-    printf("%.*s", taille_restant, position + taille_position - taille_restant);
-    printf("\033[00m$ ");
+    fprintf(stderr,"%.*s", taille_restant, position + taille_position - taille_restant);
+    fprintf(stderr,"\033[00m$ ");
 }
 
 int main(int argc, char ** argv) {
@@ -44,8 +44,9 @@ int main(int argc, char ** argv) {
         return 1;
     }
     promptFormat();
+    rl_outstream = stderr;
     while(1) {
-        line = readline ("Enter a line: ");
+        line = readline ("");
         add_history (line);
         if(strcmp(line, "exit") == 0) {
             free(line);
