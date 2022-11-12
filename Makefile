@@ -2,13 +2,16 @@ CC ?= gcc
 CCFLAGS ?= -g -Wall -std=c99
 LINK ?= -lreadline
 
-all: slash
+all: slash pwd
 
 slash: 
 	$(CC) src/slash.c -o bin/slash $(LINK) $(CCFLAGS)
 
 # pwd: 
 # 	$(CC) $(CCFLAGS) -o bin/pwd  src/pwd.c
+
+pwd: 
+	$(CC) $(CCFLAGS) -o bin/pwd	src/pwd.c
 
 # exit: 
 # 	$(CC) $(CCFLAGS) -o bin/exit  src/exit.c
