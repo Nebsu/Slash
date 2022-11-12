@@ -113,8 +113,22 @@ int main(int argc, char ** argv) {
                 free_commande(cmd);
                 break;
             }
-        }
-        else {
+        }        
+        if(strcmp(cmd->cmd, "pwd") == 0) {
+            if(execve("/bin/pwd", cmd -> args, NULL) == -1) {
+                perror("pwd");
+            }else{
+                val_retour = 0;
+                continue;
+            }
+        // }else if (strcmp(cmd->cmd, "cd") == 0) {
+        //     if (execve("/bin/cd", cmd -> args, NULL) == -1) {
+        //         perror("cd");
+        //     }else{
+        //         val_retour = 0;
+        //         continue;
+        //     }
+        } else {
             val_retour = 1;
             printf("Commande inconnue\n");
         }
