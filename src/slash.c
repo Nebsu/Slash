@@ -17,17 +17,20 @@
 static char *line = (char *)NULL;
 int val_retour = 0;
 
-int nb_space(char *str) {
+int nb_mots(char *str) {
     int i = 0;
     int nb = 0;
-    bool space = false;
+    bool space = true;
+    if(str[0] == ' ') {
+        space = false;
+    }
     while (str[i] != '\0') {
         if (str[i] == ' ') {
-            if (!space) {
-                nb++;
-                space = true;
-            }
+            space = true;
         } else {
+            if (space) {
+                nb++;
+            }
             space = false;
         }
         i++;
@@ -36,7 +39,7 @@ int nb_space(char *str) {
 }
 
 commande * getCommand(char * buffer) {
-    commande * cmd = init_commande(nb_space(buffer));
+    commande * cmd = init_commande(nb_mots(buffer));
     if(!cmd) {
         return NULL;
     }
@@ -97,16 +100,27 @@ int main(int argc, char ** argv) {
         add_history (line);
         commande * cmd = getCommand(line);
         if (strcmp(cmd->cmd, "exit") == 0) {
-            free_commande(cmd);
-            break;
+            if(cmd->argc > 2) {
+                printf("\033[91mTrop d'arguments \033[00m\n");
+                val_retour = 1;
+            }
+            else if (cmd->argc == 1) {
+                free_commande(cmd);
+                break;
+            }
+            else {
+                val_retour = atoi(cmd->args[0]);
+                free_commande(cmd);
+                break;
+            }
         }
         else {
             val_retour = 1;
             printf("Commande inconnue\n");
-            promptFormat();
         }
+        promptFormat();
         free_commande(cmd);
     }
     free(line);
-    return 0;
+    return val_retour;
 }
