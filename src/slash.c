@@ -4,6 +4,7 @@
 #include <math.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <stdbool.h>
 
 
 #define MAX_ARGS_NUMBER 4096
@@ -11,8 +12,54 @@
 #define MAX_PATH 4096
 #define MAX_PRINTED_PATH 24
 
+#include "commande.h"
+
 static char *line = (char *)NULL;
 int val_retour = 0;
+
+int nb_space(char *str) {
+    int i = 0;
+    int nb = 0;
+    bool space = false;
+    while (str[i] != '\0') {
+        if (str[i] == ' ') {
+            if (!space) {
+                nb++;
+                space = true;
+            }
+        } else {
+            space = false;
+        }
+        i++;
+    }
+    return nb;
+}
+
+commande * getCommand(char * buffer) {
+    commande * cmd = init_commande(nb_space(buffer));
+    if(!cmd) {
+        return NULL;
+    }
+    int i = 0;
+    while(buffer[i] != ' ' && buffer[i] != '\0') {
+        cmd->cmd[i] = buffer[i];
+        i++;
+    }
+    cmd->cmd[i++] = '\0';
+    int j = 0;
+    int k = 0;
+    while(buffer[i] != '\0') {
+        while(buffer[i] != ' ' && buffer[i] != '\0') {
+            cmd->args[j][k++] = buffer[i++];
+        }
+        if(k != 0) {
+            cmd->args[j++][k] = '\0';
+            k = 0;
+        }
+        i++;
+    }
+    return cmd;
+}
 
 void promptFormat() {
     char * position = "zzzzzzzzzzzzzzzzzzzzzzzzz";
@@ -48,15 +95,18 @@ int main(int argc, char ** argv) {
     while(1) {
         line = readline ("");
         add_history (line);
-        if(strcmp(line, "exit") == 0) {
-            free(line);
-            return 0;
+        commande * cmd = getCommand(line);
+        if (strcmp(cmd->cmd, "exit") == 0) {
+            free_commande(cmd);
+            break;
         }
         else {
             val_retour = 1;
             printf("Commande inconnue\n");
             promptFormat();
         }
+        free_commande(cmd);
     }
+    free(line);
     return 0;
 }
