@@ -17,7 +17,6 @@ void absolute_pwd() {
     printf("%s",buffer);
 }
 int main(int argc, char ** argv) {
-    printf("appl arg = %s \n",argv[0]);
     if (argc > 3) return -1;
     logical_pwd();
     if ((strcmp(argv[2],"-L"))==0) logical_pwd();
