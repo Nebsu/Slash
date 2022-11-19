@@ -64,28 +64,38 @@ commande * getCommand(char * buffer) {
     return cmd;
 }
 
-void promptFormat() {
-    char * position = "zzzzzzzzzzzzzzzzzzzzzzzzz";
+char * promptFormat() {
+    char * res = malloc(MAX_ARGS_STRLEN);
+    char * position = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzaaaz";
     int taille = 0;
+
+    //Ajoute la valeur de retour
     if (val_retour == 0) {
-        fprintf(stderr,"\033[32m[0]");
+        strcat(res, "\033[32m[0]\033[36m");
         taille += 3;
     } else {
-        fprintf(stderr,"\033[91m[1]");
-        taille+= 3;
+        strcat(res,"\033[91m[1]\033[36m");
+        taille += 3;
     }
-    fprintf(stderr,"\033[36m");
     int taille_restant = 30 - taille - 2;
     int taille_position = strlen(position);
+
+    //Ajoute les ... si la taille de la position est trop grande
     if(taille_position > 25) {
         taille_restant -= 3;
-        fprintf(stderr,"...");
+        strcat(res, "...");
     }
     if(taille_position < taille_restant) {
         taille_restant = taille_position;
     }
-    fprintf(stderr,"%.*s", taille_restant, position + taille_position - taille_restant);
-    fprintf(stderr,"\033[00m$ ");
+
+    //Ajoute le chemin
+    char * tmp = position + taille_position - taille_restant;
+    strcat(res, tmp);
+
+    //Ajoute le $ en blanc
+    strcat(res, "\033[00m$");
+    return res;
 }
 
 int main(int argc, char ** argv) {
@@ -93,7 +103,7 @@ int main(int argc, char ** argv) {
         printf("\033[91mTrop d'arguments \033[00m\n");
         return 1;
     }
-    promptFormat();
+    fprintf(stderr, "%s", promptFormat());
     rl_outstream = stderr;
     while(1) {
         line = readline ("");
@@ -132,7 +142,7 @@ int main(int argc, char ** argv) {
             val_retour = 1;
             printf("Commande inconnue\n");
         }
-        promptFormat();
+        printf(stderr,"%s", promptFormat());
         free_commande(cmd);
     }
     free(line);
