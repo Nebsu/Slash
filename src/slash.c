@@ -110,7 +110,7 @@ char * promptFormat() {
     strcat(res, tmp);
 
     //Ajoute le $ en blanc
-    strcat(res, "\033[00m$");
+    strcat(res, "\033[00m$ ");
     return res;
 }
 
@@ -119,10 +119,9 @@ int main(int argc, char ** argv) {
         printf("\033[91mTrop d'arguments \033[00m\n");
         return 1;
     }
-    fprintf(stderr, "%s", promptFormat());
     rl_outstream = stderr;
     while(1) {
-        line = readline ("");
+        line = readline (promptFormat());
         add_history (line);
         commande * cmd = getCommand(line);
         if (strcmp(cmd->cmd, "exit") == 0) {
@@ -148,8 +147,10 @@ int main(int argc, char ** argv) {
             //         val_retour = 0;
             //         continue;
             //     }
-            promptFormat();
             free_commande(cmd);
+        }else{
+            printf("Commande inexistante\n");
+            val_retour = 1;
         }
     }
     free(line);
