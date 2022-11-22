@@ -11,12 +11,17 @@
 #define MAX_ARGS_STRLEN 4096
 #define MAX_PATH 4096
 #define MAX_PRINTED_PATH 24
+#define ROUGE "\033[91m"
+#define VERT "\033[32m"
+#define BLEU "\033[36m"
+#define BLANC "\033[00m"
 
 #include "commande.h"
 // #include "pwd.c"
 
 static char *line = (char *)NULL;
 int val_retour = 0;
+char * buffer = NULL;
 
 int nb_mots(char *str) {
     int i = 0;
@@ -81,16 +86,16 @@ commande * getCommand(char * buffer) {
 }
 
 char * promptFormat() {
-    char * res = malloc(MAX_ARGS_STRLEN);
+    buffer = malloc(MAX_ARGS_STRLEN);
     char * position = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzaaaz";
     int taille = 0;
 
     //Ajoute la valeur de retour
     if (val_retour == 0) {
-        strcat(res, "\033[32m[0]\033[36m");
+        strcat(buffer, "\033[32m[0]\033[36m");
         taille += 3;
     } else {
-        strcat(res,"\033[91m[1]\033[36m");
+        strcat(buffer,"\033[91m[1]\033[36m");
         taille += 3;
     }
     int taille_restant = 30 - taille - 2;
@@ -99,7 +104,7 @@ char * promptFormat() {
     //Ajoute les ... si la taille de la position est trop grande
     if(taille_position > 25) {
         taille_restant -= 3;
-        strcat(res, "...");
+        strcat(buffer, "...");
     }
     if(taille_position < taille_restant) {
         taille_restant = taille_position;
@@ -107,11 +112,11 @@ char * promptFormat() {
 
     //Ajoute le chemin
     char * tmp = position + taille_position - taille_restant;
-    strcat(res, tmp);
+    strcat(buffer, tmp);
 
     //Ajoute le $ en blanc
-    strcat(res, "\033[00m$ ");
-    return res;
+    strcat(buffer, "\033[00m$ ");
+    return buffer;
 }
 
 int main(int argc, char ** argv) {
@@ -122,6 +127,7 @@ int main(int argc, char ** argv) {
     rl_outstream = stderr;
     while(1) {
         line = readline (promptFormat());
+        free(buffer);
         add_history (line);
         commande * cmd = getCommand(line);
         if (strcmp(cmd->cmd, "exit") == 0) {
