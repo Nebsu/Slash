@@ -2,7 +2,7 @@ CC ?= gcc
 CCFLAGS ?= -g -Wall -std=c99
 LINK ?= -lreadline
 
-all: slash pwd
+all: slash pwd cd2
 
 slash: 
 	$(CC) src/slash.c -o bin/slash $(LINK) $(CCFLAGS)
@@ -16,8 +16,8 @@ pwd:
 # exit: 
 # 	$(CC) $(CCFLAGS) -o bin/exit  src/exit.c
 
-# cd: 
-# 	$(CC) $(CCFLAGS) -o bin/cd  src/cd.c
+cd2: 
+	$(CC) $(CCFLAGS) -o bin/cd  src/cd.c
 
 clean:
 	rm -f bin/*
