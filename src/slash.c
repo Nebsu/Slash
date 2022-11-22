@@ -5,7 +5,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <stdbool.h>
-
+#include <unistd.h>
 
 #define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
@@ -13,6 +13,7 @@
 #define MAX_PRINTED_PATH 24
 
 #include "commande.h"
+// #include "pwd.c"
 
 static char *line = (char *)NULL;
 int val_retour = 0;
@@ -39,28 +40,43 @@ int nb_mots(char *str) {
 }
 
 commande * getCommand(char * buffer) {
-    commande * cmd = init_commande(nb_mots(buffer));
+    int mot = nb_mots(buffer);
+    if(mot == 0) {
+        return NULL;
+    }
+    commande * cmd = malloc(sizeof(commande));
     if(!cmd) {
         return NULL;
     }
+    cmd->argc = mot;
+    cmd->args = malloc(sizeof(char *) * mot);
+    if(!cmd->args) {
+        free(cmd);
+        return NULL;
+    }
+    int debut = 0;
+    int fin = 0;
     int i = 0;
-    while(buffer[i] != ' ' && buffer[i] != '\0') {
-        cmd->cmd[i] = buffer[i];
-        i++;
-    }
-    cmd->cmd[i++] = '\0';
-    int j = 0;
-    int k = 0;
-    while(buffer[i] != '\0') {
-        while(buffer[i] != ' ' && buffer[i] != '\0') {
-            cmd->args[j][k++] = buffer[i++];
+    while(buffer[fin] != '\0') {
+        if(buffer[fin] == ' ') {
+            cmd->args[i] = malloc(fin - debut + 1);
+            if(!cmd->args[i]) {
+                return NULL;
+            }
+            strncpy(cmd->args[i], buffer + debut, fin - debut);
+            cmd->args[i][fin - debut] = '\0';
+            debut = fin + 1;
+            i++;
         }
-        if(k != 0) {
-            cmd->args[j++][k] = '\0';
-            k = 0;
-        }
-        i++;
+        fin++;
     }
+    cmd->args[i] = malloc(fin - debut + 1);
+    if(!cmd->args[i]) {
+        return NULL;
+    }
+    strncpy(cmd->args[i], buffer + debut, fin - debut);
+    cmd->args[i][fin - debut] = '\0';
+    cmd->cmd = cmd->args[0];
     return cmd;
 }
 
@@ -103,37 +119,28 @@ int main(int argc, char ** argv) {
             if(cmd->argc > 2) {
                 printf("\033[91mTrop d'arguments \033[00m\n");
                 val_retour = 1;
-            }
-            else if (cmd->argc == 1) {
                 free_commande(cmd);
-                break;
-            }
-            else {
-                val_retour = atoi(cmd->args[0]);
-                free_commande(cmd);
-                break;
-            }
-        }        
-        if(strcmp(cmd->cmd, "pwd") == 0) {
-            if(execve("/bin/pwd", cmd -> args, NULL) == -1) {
-                perror("pwd");
-            }else{
-                val_retour = 0;
                 continue;
             }
-        // }else if (strcmp(cmd->cmd, "cd") == 0) {
-        //     if (execve("/bin/cd", cmd -> args, NULL) == -1) {
-        //         perror("cd");
-        //     }else{
-        //         val_retour = 0;
-        //         continue;
-        //     }
-        } else {
-            val_retour = 1;
-            printf("Commande inconnue\n");
+            else if(cmd->argc != 1) {
+                val_retour = atoi(cmd->args[0]);
+            }
+            printf("%s\n",cmd->args[0]);
+            free_commande(cmd);
+            break;
         }
-        promptFormat();
-        free_commande(cmd);
+        else if(strcmp(cmd->cmd, "pwd") == 0) {
+            // pwd(cmd->argc, cmd->args);
+            // }else if (strcmp(cmd->cmd, "cd") == 0) {
+            //     if (execve("/bin/cd", cmd -> args, NULL) == -1) {
+            //         perror("cd");
+            //     }else{
+            //         val_retour = 0;
+            //         continue;
+            //     }
+            promptFormat();
+            free_commande(cmd);
+        }
     }
     free(line);
     return val_retour;

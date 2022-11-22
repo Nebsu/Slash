@@ -10,7 +10,7 @@ slash:
 # pwd: 
 # 	$(CC) $(CCFLAGS) -o bin/pwd  src/pwd.c
 
-pwd: 
+pwd:
 	$(CC) $(CCFLAGS) -o bin/pwd	src/pwd.c
 
 # exit: 
