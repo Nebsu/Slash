@@ -1,3 +1,5 @@
+#define _DEFAULT_SOURCE
+#define  _BSD_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,6 +8,7 @@
 #include <readline/history.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <wait.h>
 
 #define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
@@ -17,7 +20,8 @@
 #define BLANC "\033[00m"
 
 #include "commande.h"
-// #include "pwd.c"
+#include "pwd.h"
+#include "cd.h"
 
 static char *line = (char *)NULL;
 int val_retour = 0;
@@ -81,13 +85,14 @@ commande * getCommand(char * buffer) {
     }
     strncpy(cmd->args[i], buffer + debut, fin - debut);
     cmd->args[i][fin - debut] = '\0';
+    cmd->args[i + 1] = NULL;
     cmd->cmd = cmd->args[0];
     return cmd;
 }
 
 char * promptFormat() {
     buffer = malloc(MAX_ARGS_STRLEN);
-    char * position = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzaaaz";
+    char * position = getenv("PWD");
     int taille = 0;
 
     //Ajoute la valeur de retour
@@ -120,6 +125,8 @@ char * promptFormat() {
 }
 
 int main(int argc, char ** argv) {
+    // printf(getenv("PWD"));
+    int n;
     if(argc > 1) {
         printf("\033[91mTrop d'arguments \033[00m\n");
         return 1;
@@ -127,8 +134,9 @@ int main(int argc, char ** argv) {
     rl_outstream = stderr;
     while(1) {
         line = readline (promptFormat());
-        free(buffer);
         add_history (line);
+        if(!buffer) perror("buffer null");
+        free(buffer);
         commande * cmd = getCommand(line);
         if (strcmp(cmd->cmd, "exit") == 0) {
             if(cmd->argc > 2) {
@@ -144,20 +152,25 @@ int main(int argc, char ** argv) {
             break;
         }
         else if(strcmp(cmd->cmd, "pwd") == 0) {
-            // pwd(cmd->argc, cmd->args);
-            // }else if (strcmp(cmd->cmd, "cd") == 0) {
-            //     if (execve("/bin/cd", cmd -> args, NULL) == -1) {
-            //         perror("cd");
-            //     }else{
-            //         val_retour = 0;
-            //         continue;
-            //     }
+            val_retour = pwd(cmd->argc, cmd->args);
             free_commande(cmd);
-        }else{
+        }
+        else if (strcmp(cmd->cmd, "cd") == 0){
+            val_retour = cd(cmd->argc, cmd->args);
+            if(cmd ->argc > 2 && strcmp(cmd->args[1], "-P") == 0  && strcmp(cmd->args[2], "..") == 0) {
+            }
+            else {
+
+            free_commande(cmd);
+            }
+        }
+        else{
             printf("Commande inexistante\n");
             val_retour = 1;
         }
+
     }
+    if(!line) perror("line null");
     free(line);
     return val_retour;
 }

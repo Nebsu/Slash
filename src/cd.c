@@ -18,7 +18,7 @@
 char OLD_PWD [PATH_MAX];
 
 
-int remove_rep(char *path,int len,int totalLength,int charskipped) {
+int remove_rep(char *path,int len,int totalLength,int charskipped,int end) {
     int i = len - charskipped;
     while(i > 0 && path[i] != '/') {
         i--;
@@ -29,7 +29,8 @@ int remove_rep(char *path,int len,int totalLength,int charskipped) {
         i = 0;
     }
     else {
-        memmove(&path[i+1],&path[len+1],totalLength-len);
+        if(!end) memmove(&path[i+1],&path[len+1],totalLength-len);
+        else path[i+1] = '\0';
     }
     return len - i ;
 }
@@ -43,13 +44,13 @@ char * path_simplificator (char * path,size_t len) {
     while (i < len) {
         if (path[i] == '/') {
             if (point == 2) {
-                del = remove_rep(path,i,len,CHAR_SKIP_2);
+                del = remove_rep(path,i,len,CHAR_SKIP_2,0);
                 len -= del;
                 i -= del;
                 del=0;
             }
             else if (point == 1) {
-                del = remove_rep(path,i,len,CHAR_SKIP_1);
+                del = remove_rep(path,i,len,CHAR_SKIP_1,0);
                 len -= del;
                 i -= del;
                 del=0;
@@ -69,18 +70,19 @@ char * path_simplificator (char * path,size_t len) {
         i++;
     }
     if (point == 2) {
-        remove_rep(path,i,len,CHAR_SKIP_2);
+        len-=remove_rep(path,i,len,CHAR_SKIP_2,1);
     }
     else if (point == 1) {
-        remove_rep(path,i,len,CHAR_SKIP_1);
+        len-=remove_rep(path,i,len,CHAR_SKIP_1,1);
     }
+
     for(int j = len; j < oldlen;j++) {
         path[j] = '\0';
     }
     return path;
 }
 
-char buffer [PATH_MAX];
+char buffer_path [PATH_MAX];
 char tmpEnv [PATH_MAX];
 
 char * setDirectory(char * path) {
@@ -97,7 +99,6 @@ char * setDirectory(char * path) {
         strcat(tmpEnv,SLASH);
         strcpy(tmp,path);
         strcat(tmpEnv,tmp);
-
         free(tmp);
     }
     path_simplificator(tmpEnv,strlen(tmpEnv));
@@ -112,19 +113,21 @@ int change_dir(char * path,int physical) {
     strcpy(OLD_PWD,getenv("PWD"));
     if (strcmp(path,"") == 0) {
         d = chdir(getenv("HOME"));  
-        strcpy(buffer,getenv("HOME"));
+        strcpy(buffer_path,getenv("HOME"));
         home = 1;
     }
     else if (strcmp(path,"-") == 0) {
         moins = 1;
         if (getenv("OLDPWD") != NULL) {
             d = chdir(getenv("OLDPWD"));
-            getcwd(buffer,PATH_MAX);
-            printf("new path %s \n",buffer);
+            getcwd(buffer_path,PATH_MAX);
         }
         else printf("Pas de répertoire ancien");
     }
     else {
+        if (strcmp(path,"d") == 0 ) {
+            // chdir(getenv("PWD"));
+        }
         d = chdir(path);
     }
     if (d == -1) {
@@ -132,18 +135,22 @@ int change_dir(char * path,int physical) {
         return 1;
     }
     if (physical) {
-        getcwd(buffer,PATH_MAX);
+        getcwd(buffer_path,PATH_MAX);
     }
     else if( !moins && !home){
-        strcpy(buffer,setDirectory(path));
+        strcpy(buffer_path,setDirectory(path));
     }
-    if(strlen(buffer) > 1 && buffer[strlen(buffer)- 1] == '/') buffer[strlen(buffer) - 1] = '\0';
-    setenv("PWD",buffer,1);
+    if(strlen(buffer_path) > 1 && buffer_path[strlen(buffer_path)- 1] == '/') buffer_path[strlen(buffer_path) - 1] = '\0';
+    setenv("PWD",buffer_path,1);
     setenv("OLDPWD",OLD_PWD,1);
+    chdir(getenv("PWD"));
     return 0;
 }
 
+
 int cd (int argc, char ** argv) {
+    fflush(stdout);
+    // if(argc > 1 && strcmp(argv[1],"d") == 0) printf("rep actuel = %s",getenv("PWD"));
 
     switch (argc) {
             case 1 : return change_dir("",0);break;
@@ -176,11 +183,6 @@ int cd (int argc, char ** argv) {
     return 0;
 }
 
-
-int main(int argc, char ** argv) {
-    if (argc > 3) return -1;
+int main (int argc, char ** argv) {
     cd(argc,argv);
-    printf("OLDPWD = %s\n",getenv("OLDPWD"));
-    printf("nPWD = %s\n",getenv("PWD"));
-    // return cd(argv[1]);
 }

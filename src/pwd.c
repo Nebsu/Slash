@@ -7,20 +7,29 @@
 #include <string.h>
 #include <unistd.h>
 
-char  buffer[PATH_MAX];
+#include "pwd.h"
+
+char  buffer_pwd[PATH_MAX];
 void logical_pwd() {
-    printf("%s",getenv("PWD"));
+    printf("%s\n",getenv("PWD"));
+    fflush(stdout);
 }
 
 void absolute_pwd() {
-    getcwd(buffer,PATH_MAX);
-    printf("%s",buffer);
+    getcwd(buffer_pwd,PATH_MAX);
+    printf("%s\n",buffer_pwd);
+    fflush(stdout);
 }
-int main(int argc, char ** argv) {
+int pwd(int argc, char ** argv) {
     if (argc > 3) return -1;
-    logical_pwd();
-    if ((strcmp(argv[2],"-L"))==0) logical_pwd();
-    else if ((strcmp(argv[2],"-P") == 0)) absolute_pwd();
+    if (argc == 1) logical_pwd();
+    else if ((strcmp(argv[1],"-L"))==0) logical_pwd();
+    else if ((strcmp(argv[1],"-P") == 0)) absolute_pwd();
+    else printf("Mauvais format ,format attendu : pwd [-L | -P] \n");
+    fflush(stdout);
     return 0;    
 }
+
+
+
 

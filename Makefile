@@ -2,22 +2,19 @@ CC ?= gcc
 CCFLAGS ?= -g -Wall -std=c99
 LINK ?= -lreadline
 
-all: slash pwd cd2
+all: slash
 
-slash: 
-	$(CC) src/slash.c -o slash $(LINK) $(CCFLAGS)
+slash : slash.o cd.o pwd.o
+	$(CC) $(CCFLAGS) src/slash.c bin/pwd.o bin/cd.o -o slash $(LINK)
 
-# pwd: 
-# 	$(CC) $(CCFLAGS) -o bin/pwd  src/pwd.c
+slash.o: src/slash.c 
+	$(CC) -c -o bin/slash.o src/slash.c  $(LINK) $(CCFLAGS)
 
-pwd:
-	$(CC) $(CCFLAGS) -o bin/pwd	src/pwd.c
+pwd.o: src/pwd.h src/pwd.c
+	$(CC) $(CCFLAGS) -c -o bin/pwd.o src/pwd.c
 
-# exit: 
-# 	$(CC) $(CCFLAGS) -o bin/exit  src/exit.c
-
-cd2: 
-	$(CC) $(CCFLAGS) -o bin/cd  src/cd.c
+cd.o: src/cd.c src/cd.h
+	$(CC) $(CCFLAGS) -c -o bin/cd.o src/cd.c
 
 clean:
 	rm -f bin/* slash
