@@ -138,9 +138,8 @@ int main(int argc, char ** argv) {
                 continue;
             }
             else if(cmd->argc != 1) {
-                val_retour = atoi(cmd->args[0]);
+                val_retour = atoi(cmd->args[1]);
             }
-            printf("%s\n",cmd->args[0]);
             free_commande(cmd);
             break;
         }

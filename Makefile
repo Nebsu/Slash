@@ -5,7 +5,7 @@ LINK ?= -lreadline
 all: slash pwd cd2
 
 slash: 
-	$(CC) src/slash.c -o bin/slash $(LINK) $(CCFLAGS)
+	$(CC) src/slash.c -o slash $(LINK) $(CCFLAGS)
 
 # pwd: 
 # 	$(CC) $(CCFLAGS) -o bin/pwd  src/pwd.c
@@ -20,4 +20,4 @@ cd2:
 	$(CC) $(CCFLAGS) -o bin/cd  src/cd.c
 
 clean:
-	rm -f bin/*
+	rm -f bin/* slash
