@@ -150,7 +150,7 @@ int change_dir(char * path,int physical) {
 
 int cd (int argc, char ** argv) {
     fflush(stdout);
-    // if(argc > 1 && strcmp(argv[1],"d") == 0) printf("rep actuel = %s",getenv("PWD"));
+    if(argc > 1 && strcmp(argv[1],"d") == 0) printf("rep actuel = %s",getenv("PWD"));
 
     switch (argc) {
             case 1 : return change_dir("",0);break;
@@ -181,8 +181,4 @@ int cd (int argc, char ** argv) {
                 
         }
     return 0;
-}
-
-int main (int argc, char ** argv) {
-    cd(argc,argv);
 }

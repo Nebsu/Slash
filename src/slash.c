@@ -135,7 +135,6 @@ int main(int argc, char ** argv) {
     while(1) {
         line = readline (promptFormat());
         add_history (line);
-        if(!buffer) perror("buffer null");
         free(buffer);
         commande * cmd = getCommand(line);
         if (strcmp(cmd->cmd, "exit") == 0) {
@@ -160,8 +159,7 @@ int main(int argc, char ** argv) {
             if(cmd ->argc > 2 && strcmp(cmd->args[1], "-P") == 0  && strcmp(cmd->args[2], "..") == 0) {
             }
             else {
-
-            free_commande(cmd);
+                free_commande(cmd);
             }
         }
         else{
@@ -170,7 +168,5 @@ int main(int argc, char ** argv) {
         }
 
     }
-    if(!line) perror("line null");
-    free(line);
     return val_retour;
 }
