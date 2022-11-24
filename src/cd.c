@@ -16,6 +16,7 @@
 #define SLASH "/"
 
 char OLD_PWD [PATH_MAX];
+char five_chars[5];
 
 
 int remove_rep(char *path,int len,int totalLength,int charskipped,int end) {
@@ -120,21 +121,20 @@ int change_dir(char * path,int physical) {
         moins = 1;
         if (getenv("OLDPWD") != NULL) {
             d = chdir(getenv("OLDPWD"));
-            getcwd(buffer_path,PATH_MAX);
+            strcpy(buffer_path,getenv("OLDPWD"));
+
         }
         else printf("Pas de répertoire ancien");
     }
     else {
-        if (strcmp(path,"d") == 0 ) {
-            // chdir(getenv("PWD"));
-        }
         d = chdir(path);
     }
     if (d == -1) {
         perror("chdir");
         return 1;
     }
-    if (physical) {
+    strncpy(five_chars,path,5);
+    if (physical || strcmp(five_chars,"../..") == 0) {
         getcwd(buffer_path,PATH_MAX);
     }
     else if( !moins && !home){
@@ -150,8 +150,6 @@ int change_dir(char * path,int physical) {
 
 int cd (int argc, char ** argv) {
     fflush(stdout);
-    if(argc > 1 && strcmp(argv[1],"d") == 0) printf("rep actuel = %s",getenv("PWD"));
-
     switch (argc) {
             case 1 : return change_dir("",0);break;
             case 2 : if(argv[1][0] == '-' && strlen(argv[1]) > 1) {
@@ -166,7 +164,8 @@ int cd (int argc, char ** argv) {
                 return 1;
             }break;
             }
-            return change_dir(argv[1],0);break;
+            return change_dir(argv[1],0);
+            break;
             case 3 : 
             if (strcmp(argv[1],"-P") == 0) {
                 return change_dir(argv[2],1);
