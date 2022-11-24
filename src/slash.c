@@ -4,6 +4,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <stdbool.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #define MAX_ARGS_STRLEN 4096
 #define ROUGE "\033[91m"
@@ -23,13 +25,11 @@ int nb_mots(char *str) {
     int i = 0;
     int nb = 0;
     bool space = true;
-    if(str[0] == ' ') {
-        space = false;
-    }
     while (str[i] != '\0') {
         if (str[i] == ' ') {
             space = true;
-        } else {
+        }
+        else {
             if (space) {
                 nb++;
             }
@@ -167,13 +167,27 @@ int main(int argc, char ** argv) {
             val_retour = pwd(cmd->argc, cmd->args);
             free_commande(cmd);
         }
-        else if (strcmp(cmd->cmd, "cd") == 0){
+        else if (strcmp(cmd->cmd, "cd") == 0) {
             val_retour = cd(cmd->argc, cmd->args);
-                free_commande(cmd);
+            free_commande(cmd);
         }
-        else{
-            printf("%sCommande inexistante%s\n",ROUGE,BLANC);
-            val_retour = 1;
+        else {
+            int n;
+            switch (n = fork()) {
+                case -1:
+                    perror("fork");
+                    exit(EXIT_FAILURE);
+                case 0:
+                    execvp(cmd->cmd, cmd->args);
+                    printf("%sCommande inexistante%s\n",ROUGE,BLANC);
+                    val_retour = 127;
+                    break;
+                default:
+                    wait(&n);
+                    val_retour = WEXITSTATUS(n);
+                    free_commande(cmd);
+                    break;
+            }
         }
         free(line);
     }
