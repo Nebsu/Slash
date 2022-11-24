@@ -94,19 +94,23 @@ char * promptFormat() {
     char * position = getenv("PWD");
     int taille = 0;
 
-    //Ajoute la valeur de retour
+    //Ajoute la valeur de retour 
     if (val_retour == 0) {
-        strcat(buffer, "\033[32m[0]\033[36m");
-        taille += 3;
-    } else {
-        strcat(buffer,"\033[91m[1]\033[36m");
-        taille += 3;
+        taille += sprintf(buffer, VERT);
+        
     }
+    else {
+        taille += sprintf(buffer, ROUGE);
+    }
+    taille += sprintf(buffer + taille, "[");
+    taille += sprintf(buffer + taille, "%d", val_retour);
+    taille += sprintf(buffer + taille, "]");
+    taille += sprintf(buffer + taille, BLANC);
     int taille_restant = 30 - taille - 2;
     int taille_position = strlen(position);
 
     //Ajoute les ... si la taille de la position est trop grande
-    if(taille_position > 25) {
+    if(taille_position > 45) {
         taille_restant -= 3;
         strcat(buffer, "...");
     }
@@ -125,7 +129,7 @@ char * promptFormat() {
 
 int main(int argc, char ** argv) {
     // printf(getenv("PWD"));
-    int n;
+    // int n;
     if(argc > 1) {
         printf("\033[91mTrop d'arguments \033[00m\n");
         return 1;
