@@ -143,6 +143,7 @@ int main(int argc, char ** argv) {
         }
         if(strcmp(line, "") == 0) {
             free(buffer);
+            free(line);
             continue;
         }
         add_history (line);
@@ -153,6 +154,7 @@ int main(int argc, char ** argv) {
                 printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
                 val_retour = 1;
                 free_commande(cmd);
+                free(line);
                 continue;
             }
             else if(cmd->argc != 1) {
