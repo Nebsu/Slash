@@ -128,8 +128,6 @@ char * promptFormat() {
 }
 
 int main(int argc, char ** argv) {
-    // printf(getenv("PWD"));
-    // int n;
     if(argc > 1) {
         printf("\033[91mTrop d'arguments \033[00m\n");
         return 1;
@@ -165,7 +163,7 @@ int main(int argc, char ** argv) {
             printf("Commande inexistante\n");
             val_retour = 1;
         }
-
+        free(line);
     }
     return val_retour;
 }
