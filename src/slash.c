@@ -50,42 +50,41 @@ int nb_mots(char *str) {
 
 commande * getCommand(char * buffer) {
     int mot = nb_mots(buffer);
-    if(mot == 0) {
-        return NULL;
+    commande * cmd;
+    if((cmd = malloc(sizeof(commande))) == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
     }
-    commande * cmd = malloc(sizeof(commande));
-    if(!cmd) {
-        return NULL;
+    if((cmd->args = malloc(sizeof(char *) * (mot + 1))) == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
     }
+    cmd->args[mot] = NULL;
     cmd->argc = mot;
-    cmd->args = malloc(sizeof(char *) * mot);
-    if(!cmd->args) {
-        free(cmd);
-        return NULL;
-    }
-    int debut = 0;
-    int fin = 0;
     int i = 0;
-    while(buffer[fin] != '\0') {
-        if(buffer[fin] == ' ') {
-            cmd->args[i] = malloc(fin - debut + 1);
-            if(!cmd->args[i]) {
-                return NULL;
+    int j = 0;
+    int k = 0;
+    while (buffer[i] != '\0') {
+        if (buffer[i] == ' ') {
+            if (j != 0) {
+                cmd->args[k] = malloc(sizeof(char) * (j + 1));
+                strncpy(cmd->args[k], &buffer[i - j], j);
+                cmd->args[k][j] = '\0';
+                k++;
+                j = 0;
             }
-            strncpy(cmd->args[i], buffer + debut, fin - debut);
-            cmd->args[i][fin - debut] = '\0';
-            debut = fin + 1;
-            i++;
+        } else {
+            j++;
         }
-        fin++;
+        i++;
     }
-    cmd->args[i] = malloc(fin - debut + 1);
-    if(!cmd->args[i]) {
-        return NULL;
+    if (j != 0) {
+        cmd->args[k] = malloc(sizeof(char) * (j + 1));
+        strncpy(cmd->args[k], &buffer[i - j], j);
+        cmd->args[k][j] = '\0';
+        k++;
+        j = 0;
     }
-    strncpy(cmd->args[i], buffer + debut, fin - debut);
-    cmd->args[i][fin - debut] = '\0';
-    cmd->args[i + 1] = NULL;
     cmd->cmd = cmd->args[0];
     return cmd;
 }
@@ -156,11 +155,7 @@ int main(int argc, char ** argv) {
         }
         else if (strcmp(cmd->cmd, "cd") == 0){
             val_retour = cd(cmd->argc, cmd->args);
-            if(cmd ->argc > 2 && strcmp(cmd->args[1], "-P") == 0  && strcmp(cmd->args[2], "..") == 0) {
-            }
-            else {
                 free_commande(cmd);
-            }
         }
         else{
             printf("Commande inexistante\n");
