@@ -1,19 +1,11 @@
-#define _DEFAULT_SOURCE
-#define  _BSD_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <stdbool.h>
-#include <unistd.h>
-#include <wait.h>
 
-#define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
-#define MAX_PATH 4096
-#define MAX_PRINTED_PATH 24
 #define ROUGE "\033[91m"
 #define VERT "\033[32m"
 #define BLEU "\033[36m"
@@ -68,18 +60,27 @@ commande * getCommand(char * buffer) {
         if (buffer[i] == ' ') {
             if (j != 0) {
                 cmd->args[k] = malloc(sizeof(char) * (j + 1));
+                if(cmd->args[k] == NULL) {
+                    perror("malloc");
+                    exit(EXIT_FAILURE);
+                }
                 strncpy(cmd->args[k], &buffer[i - j], j);
                 cmd->args[k][j] = '\0';
                 k++;
                 j = 0;
             }
-        } else {
+        }
+        else {
             j++;
         }
         i++;
     }
     if (j != 0) {
         cmd->args[k] = malloc(sizeof(char) * (j + 1));
+        if(cmd->args[k] == NULL) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
         strncpy(cmd->args[k], &buffer[i - j], j);
         cmd->args[k][j] = '\0';
         k++;
@@ -91,6 +92,10 @@ commande * getCommand(char * buffer) {
 
 char * promptFormat() {
     buffer = malloc(MAX_ARGS_STRLEN);
+    if(buffer == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
     char * position = getenv("PWD");
     int taille = 0;
 
@@ -102,7 +107,7 @@ char * promptFormat() {
         taille += sprintf(buffer, ROUGE);
     }
     taille += sprintf(buffer + taille, "[%d]%s", val_retour, BLEU);
-    int taille_restant = 30 - 3 - taille + 10;
+    int taille_restant = 30 - 2 - taille + 10;
     int taille_position = strlen(position);
 
     //Ajoute les ... si la taille de la position est trop grande
@@ -114,23 +119,28 @@ char * promptFormat() {
     if(taille_position < taille_restant) {
         taille_restant = taille_position;
         taille += sprintf(buffer + taille, "%s", position);
-    }else{
+    }
+    else {
         taille += sprintf(buffer + taille, "%s", position + taille_position - taille_restant);
     }
 
     //Ajoute le $ en blanc
-    strcat(buffer, "\033[00m$ ");
+    sprintf(buffer + taille, BLANC "$ ");
     return buffer;
 }
 
 int main(int argc, char ** argv) {
     if(argc > 1) {
-        printf("\033[91mTrop d'arguments \033[00m\n");
+        printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
         return 1;
     }
     rl_outstream = stderr;
     while(1) {
         line = readline (promptFormat());
+        if(line == NULL) {
+            free(buffer);
+            return 0;
+        }
         if(strcmp(line, "") == 0) {
             free(buffer);
             continue;
@@ -140,7 +150,7 @@ int main(int argc, char ** argv) {
         commande * cmd = getCommand(line);
         if (strcmp(cmd->cmd, "exit") == 0) {
             if(cmd->argc > 2) {
-                printf("\033[91mTrop d'arguments \033[00m\n");
+                printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
                 val_retour = 1;
                 free_commande(cmd);
                 continue;
@@ -160,7 +170,7 @@ int main(int argc, char ** argv) {
                 free_commande(cmd);
         }
         else{
-            printf("Commande inexistante\n");
+            printf("%sCommande inexistante%s\n",ROUGE,BLANC);
             val_retour = 1;
         }
         free(line);
