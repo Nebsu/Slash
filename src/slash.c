@@ -97,30 +97,26 @@ char * promptFormat() {
     //Ajoute la valeur de retour 
     if (val_retour == 0) {
         taille += sprintf(buffer, VERT);
-        
     }
     else {
         taille += sprintf(buffer, ROUGE);
     }
-    taille += sprintf(buffer + taille, "[");
-    taille += sprintf(buffer + taille, "%d", val_retour);
-    taille += sprintf(buffer + taille, "]");
-    taille += sprintf(buffer + taille, BLANC);
-    int taille_restant = 30 - taille - 2;
+    taille += sprintf(buffer + taille, "[%d]%s", val_retour, BLEU);
+    int taille_restant = 30 - 3 - taille + 10;
     int taille_position = strlen(position);
 
     //Ajoute les ... si la taille de la position est trop grande
-    if(taille_position > 45) {
+    if(taille_position > 27) {
         taille_restant -= 3;
-        strcat(buffer, "...");
-    }
-    if(taille_position < taille_restant) {
-        taille_restant = taille_position;
+        taille += sprintf(buffer + taille, "...");
     }
 
-    //Ajoute le chemin
-    char * tmp = position + taille_position - taille_restant;
-    strcat(buffer, tmp);
+    if(taille_position < taille_restant) {
+        taille_restant = taille_position;
+        taille += sprintf(buffer + taille, "%s", position);
+    }else{
+        taille += sprintf(buffer + taille, "%s", position + taille_position - taille_restant);
+    }
 
     //Ajoute le $ en blanc
     strcat(buffer, "\033[00m$ ");
@@ -135,6 +131,10 @@ int main(int argc, char ** argv) {
     rl_outstream = stderr;
     while(1) {
         line = readline (promptFormat());
+        if(strcmp(line, "") == 0) {
+            free(buffer);
+            continue;
+        }
         add_history (line);
         free(buffer);
         commande * cmd = getCommand(line);
