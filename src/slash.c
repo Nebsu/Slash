@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <glob.h>
 
 #define MAX_ARGS_STRLEN 4096
 #define ROUGE "\033[91m"
@@ -21,7 +22,7 @@ static char *line = (char *)NULL;
 int val_retour = 0;
 char * buffer = NULL;
 
-int nb_mots(char *str) {
+void nb_mots(char *str, commande * cmd) {
     int i = 0;
     int nb = 0;
     bool space = true;
@@ -33,26 +34,30 @@ int nb_mots(char *str) {
             if (space) {
                 nb++;
             }
+            if(str[i] == '-'){
+                cmd->option++;
+            }
             space = false;
         }
         i++;
     }
-    return nb;
+    cmd -> argc = nb;
 }
 
 commande * getCommand(char * buffer) {
-    int mot = nb_mots(buffer);
     commande * cmd;
     if((cmd = malloc(sizeof(commande))) == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
-    if((cmd->args = malloc(sizeof(char *) * (mot + 1))) == NULL) {
+    cmd -> option = 0;
+    nb_mots(buffer, cmd);
+    if((cmd->args = malloc(sizeof(char *) * (cmd -> argc + 1))) == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
-    cmd->args[mot] = NULL;
-    cmd->argc = mot;
+    cmd->args[cmd -> argc] = NULL;
+    // cmd->argc = mot;
     int i = 0;
     int j = 0;
     int k = 0;
@@ -149,6 +154,14 @@ int main(int argc, char ** argv) {
         add_history (line);
         free(buffer);
         commande * cmd = getCommand(line);
+        glob_t globbuf;
+        globbuf.gl_offs = cmd -> option + 1;
+        if(cmd -> argc == cmd -> option + 1) {
+            glob("", GLOB_DOOFFS, NULL, &globbuf);
+        }
+        else {
+            glob(cmd->args[cmd -> option + 1], GLOB_DOOFFS, NULL, &globbuf);
+        }
         if (strcmp(cmd->cmd, "exit") == 0) {
             if(cmd->argc > 2) {
                 printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
@@ -178,16 +191,21 @@ int main(int argc, char ** argv) {
                     perror("fork");
                     exit(EXIT_FAILURE);
                 case 0:
-                    execvp(cmd->cmd, cmd->args);
+                    for (int i = 0; i < cmd -> option + 1; i++){
+                        globbuf.gl_pathv[i] = cmd -> args[i];
+                    }
+                    execvp(cmd->cmd, &globbuf.gl_pathv[0]);
                     printf("%sCommande inexistante%s\n",ROUGE,BLANC);
                     val_retour = 127;
                     break;
                 default:
                     wait(&n);
                     val_retour = WEXITSTATUS(n);
+                    globfree(&globbuf);
                     free_commande(cmd);
                     break;
             }
+        
         }
         free(line);
     }

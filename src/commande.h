@@ -2,6 +2,7 @@ typedef struct commande {
     char *cmd;
     char **args;
     int argc;
+    int option;
 } commande;
 
 void free_commande(commande *cmd) {
