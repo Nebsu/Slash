@@ -6,7 +6,6 @@
 #include <stdbool.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <glob.h>
 
 #define MAX_ARGS_STRLEN 4096
 #define ROUGE "\033[91m"
@@ -154,14 +153,6 @@ int main(int argc, char ** argv) {
         add_history (line);
         free(buffer);
         commande * cmd = getCommand(line);
-        glob_t globbuf;
-        globbuf.gl_offs = cmd -> option + 1;
-        if(cmd -> argc == cmd -> option + 1) {
-            glob("", GLOB_DOOFFS, NULL, &globbuf);
-        }
-        else {
-            glob(cmd->args[cmd -> option + 1], GLOB_DOOFFS, NULL, &globbuf);
-        }
         if (strcmp(cmd->cmd, "exit") == 0) {
             if(cmd->argc > 2) {
                 printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
@@ -191,17 +182,13 @@ int main(int argc, char ** argv) {
                     perror("fork");
                     exit(EXIT_FAILURE);
                 case 0:
-                    for (int i = 0; i < cmd -> option + 1; i++){
-                        globbuf.gl_pathv[i] = cmd -> args[i];
-                    }
-                    execvp(cmd->cmd, &globbuf.gl_pathv[0]);
+                    execvp(cmd->cmd, cmd -> args);
                     printf("%sCommande inexistante%s\n",ROUGE,BLANC);
                     val_retour = 127;
                     break;
                 default:
                     wait(&n);
                     val_retour = WEXITSTATUS(n);
-                    globfree(&globbuf);
                     free_commande(cmd);
                     break;
             }
