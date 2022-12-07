@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define MAX_ARGS_STRLEN 4096
 #define ROUGE "\033[91m"
@@ -134,6 +135,11 @@ char * promptFormat() {
 }
 
 int main(int argc, char ** argv) {
+    struct sigaction s = {
+        .sa_handler = SIG_IGN
+    };
+    sigaction(SIGINT, &s, NULL);
+    sigaction(SIGTERM, &s, NULL);
     if(argc > 1) {
         printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
         return 1;
@@ -143,7 +149,7 @@ int main(int argc, char ** argv) {
         line = readline (promptFormat());
         if(line == NULL) {
             free(buffer);
-            return 0;
+            return val_retour;
         }
         if(strcmp(line, "") == 0) {
             free(buffer);
@@ -171,8 +177,12 @@ int main(int argc, char ** argv) {
             val_retour = pwd(cmd->argc, cmd->args);
             free_commande(cmd);
         }
-        else if (strcmp(cmd->cmd, "cd") == 0) {
+        else if(strcmp(cmd->cmd, "cd") == 0) {
             val_retour = cd(cmd->argc, cmd->args);
+            free_commande(cmd);
+        }
+        else if(strcmp(cmd->cmd, "false") == 0) {
+            val_retour = 1;
             free_commande(cmd);
         }
         else {
@@ -184,7 +194,8 @@ int main(int argc, char ** argv) {
                 case 0:
                     execvp(cmd->cmd, cmd -> args);
                     printf("%sCommande inexistante%s\n",ROUGE,BLANC);
-                    val_retour = 127;
+                    free_commande(cmd);
+                    return 127;
                     break;
                 default:
                     wait(&n);
@@ -192,7 +203,6 @@ int main(int argc, char ** argv) {
                     free_commande(cmd);
                     break;
             }
-        
         }
         free(line);
     }

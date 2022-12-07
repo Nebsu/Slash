@@ -1,5 +1,5 @@
 CC ?= gcc
-CCFLAGS ?= -g -Wall -std=c99
+CCFLAGS ?= -g -Wall -std=gnu17
 LINK ?= -lreadline
 
 all: slash
