@@ -185,6 +185,9 @@ int main(int argc, char ** argv) {
             val_retour = 1;
             free_commande(cmd);
         }
+        else if(strcmp(cmd->cmd, "*") == 0) {
+        
+        }
         else {
             int n;
             switch (n = fork()) {

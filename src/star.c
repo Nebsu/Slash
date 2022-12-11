@@ -12,59 +12,34 @@
 #include <string.h>
 #include <errno.h>
 
-
-
 #include "mystring.h"
 #include "pile.h"
 
 
-
-
 char buff [4096] [4096];
 char * pp = "..";
-struct string * string_new(size_t capacity) {
-    struct string * s = malloc(sizeof(struct string));
-    if (!s) return NULL;
-    s -> data = malloc((capacity + 1) * sizeof(char));
-    if (!s) {
-        free(s);
-        return NULL;
+
+int isFormat(char * str, char * regEx) {
+    int star = 0;
+    int strLen = strlen(str);
+    int regLen = strlen(regEx);
+    int idxStr = strLen-1;
+    int idxReg = regLen-1;
+    while ( idxStr >= 0 && idxReg >= 0 ) {
+        // printf("char str = %c char regEx = %c \n",str[idxStr],regEx[idxReg]);
+        if (regEx[idxReg] == '*') {
+            return 1;
+        }
+        if (str[idxStr] != regEx[idxReg] ) {
+            return 0;
+        }
+        else {
+            idxStr--;
+            idxReg--;
+        }
     }
-    s-> capacity = capacity;
-    s-> length = 0;
-    s-> data[0] = '\0';
-    return s;
+    return idxStr == -1 && idxReg == -1;
 }
-
-void string_delete(struct string * str) {
-    free(str -> data);
-    free(str);
-}
-
-int string_append (struct string * dest, char * src) {
-    size_t len = strlen(src);
-    if (len + dest->length >= dest -> capacity ) {
-        dest -> data = realloc(dest -> data,2*dest -> capacity);
-        if (!dest -> data) return 0;
-        dest -> capacity *=2;
-    }
-
-    strncat(dest -> data,src,strlen(src));
-    dest -> length += len;
-    return 1;
-}
-
-void string_truncate (struct string * str, size_t nchars) {
-    if(nchars > (str -> length) ) {
-        str -> data[0] = '\0';
-        str -> length = 0;
-    }
-    else {
-        str -> data [str -> length - nchars] = '\0';
-        str -> length -= nchars;
-    }
-}
-
 
 
 int oe (int fd,int i,struct string * path,char ** cmd) {
