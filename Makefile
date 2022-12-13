@@ -4,8 +4,8 @@ LINK ?= -lreadline
 
 all: slash
 
-slash: slash.o cd.o pwd.o star.o mystring.o pile.o
-	$(CC) $(CCFLAGS) src/slash.c bin/pwd.o bin/cd.o -o slash $(LINK)
+slash: slash.o cd.o pwd.o mystring.o star.o pile.o
+	$(CC) $(CCFLAGS) src/slash.c bin/pwd.o bin/cd.o bin/star.o bin/mystring.o bin/pile.o -o slash $(LINK)
 
 slash.o: src/slash.c 
 	$(CC) -c -o bin/slash.o src/slash.c  $(LINK) $(CCFLAGS)

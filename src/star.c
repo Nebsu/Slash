@@ -14,13 +14,13 @@
 
 #include "mystring.h"
 #include "pile.h"
+#include "star.h"
 
 
 char buff [4096] [4096];
 char * pp = "..";
 
 int isFormat(char * str, char * regEx) {
-    int star = 0;
     int strLen = strlen(str);
     int regLen = strlen(regEx);
     int idxStr = strLen-1;
@@ -42,7 +42,7 @@ int isFormat(char * str, char * regEx) {
 }
 
 
-int oe (int fd,int i,struct string * path,char ** cmd) {
+int oe (int fd,int i,struct string * path,char ** cmd, char ** st) {
     DIR * dir = NULL;
     struct dirent * entry;
     dir = fdopendir(fd);
@@ -52,33 +52,61 @@ int oe (int fd,int i,struct string * path,char ** cmd) {
       string_append(s,"/");
     }
     pile * p = pile_init();
-    while (entry = readdir(dir)) {
+    // int j = 0;
+    // while (st[j] != NULL){
+    //     printf("st[%d] = %s | ",j,st[j]);
+    //     j++;}
+    while ((entry = readdir(dir))) {
         if(strcmp(entry -> d_name,"..") == 0 || strcmp(entry -> d_name,".") == 0 || entry -> d_name[0] == '.') {
             continue;
         }
+        // le fichier est un repertoire on le met dans la pile 
         if (entry -> d_type == DT_DIR) {
             struct string * new = string_new(PATH_MAX);
             string_append(new,path -> data);
             string_append(new,"/");
             string_append(new,entry-> d_name);
-            // empile(p,elem_init(new));
+            if (isFormat(entry -> d_name, st[1]))
+                empile(p,elem_init(new));
         }
-            string_append(s,entry-> d_name);
+        if (isFormat(entry -> d_name, st[1])) {
+        // ajout dans le string le nom du fichier
+            string_append(s,entry -> d_name);
+        // ajout dans cmd le chemin du fichier
             strcpy(cmd[i++],s -> data);
+        // enleve de s le dernier fichier ajoute
             string_truncate(s,strlen(entry -> d_name));
+        }
     }
 
-    // elem * d = depile(p);
-    // while (d) {
-    //     int son_fd = open(d -> path -> data,O_RDONLY);
-    //     i = oe(son_fd,i,d -> path,cmd);
-    //     elem * f = d;
-    //     d = depile(p);
-    //     string_delete(f -> path);
-    //     free(f);
-    // }
+    // d = tete de la pile
+    elem * d = depile(p);
+    // remove from st the part before the first
+    int res = 0;
+    size_t len = strlen(st[1]);
+    for (size_t i = 0; i < len; i++)
+    {
+        if (st[1][i] == '/') {
+            res = i;
+            break;
+        }
+    }
+    st[1] = st[1] + res + 1;
+    printf("st[1] = %s \n",st[1]);
 
-    // free(p);
+
+    while (d) {
+        // ouverture du repertoire en bout de pile
+        int son_fd = open(d -> path -> data,O_RDONLY);
+        i = oe(son_fd,i,d -> path,cmd, st);
+        elem * f = d;
+        d = depile(p);
+        // printf("d -> data = %s\n", d -> path -> data);
+        string_delete(f -> path);
+        free(f);
+    }
+
+    free(p);
     string_delete(s);
     closedir(dir);
     return i;
@@ -86,7 +114,7 @@ int oe (int fd,int i,struct string * path,char ** cmd) {
 
 
 
-int main (int argc, char ** argv) {
+int star (int argc, char ** argv) {
     int fd = open(".",O_RDONLY);
     char ** cmd = malloc(sizeof(char *) * 4096);
     for (int i = 0; i< 4096; i++) {
@@ -94,14 +122,14 @@ int main (int argc, char ** argv) {
     }
     struct string * path = string_new(PATH_MAX);
     string_append(path, ".");
-    int j = oe(fd,1,path,cmd);
-    cmd[0] = "ls";
+    int j = oe(fd,1,path,cmd, argv);
+    cmd[0] = argv[0];
     cmd[j] = NULL;
     cmd = realloc(cmd,(j+1)*sizeof(char *));
-    for(int i = 0 ; i < j; i++) {
-      printf("%s \n",cmd[i]);
-    }
-    execvp("ls",cmd);
+    // for(int i = 0 ; i < j; i++) {
+    //   printf("%s \n",cmd[i]);
+    // }
+    execvp(cmd[0],cmd);
     perror("exec");
     return 0;
 }

@@ -1,0 +1,9 @@
+#ENABLE VALGRIND
+#IGNORE RET
+$ cd %PWD%/x/y/z/d/../../z/d/..
+$ pwd
+$ pwd -P
+$ cd %PWD%/x/y/z/d/../c
+$ pwd
+$ pwd -P
+$ exit 0

@@ -17,6 +17,7 @@
 #include "commande.h"
 #include "pwd.h"
 #include "cd.h"
+#include "star.h"
 
 static char *line = (char *)NULL;
 int val_retour = 0;
@@ -185,9 +186,6 @@ int main(int argc, char ** argv) {
             val_retour = 1;
             free_commande(cmd);
         }
-        else if(strcmp(cmd->cmd, "*") == 0) {
-        
-        }
         else {
             int n;
             switch (n = fork()) {
@@ -195,7 +193,12 @@ int main(int argc, char ** argv) {
                     perror("fork");
                     exit(EXIT_FAILURE);
                 case 0:
-                    execvp(cmd->cmd, cmd -> args);
+                    if(cmd->argc > 1){
+                        if(cmd->args[1][0] == '*'){
+                            star(cmd->argc, cmd->args);
+                        }
+                    }
+                    execvp(cmd->cmd, cmd->args);
                     printf("%sCommande inexistante%s\n",ROUGE,BLANC);
                     free_commande(cmd);
                     return 127;
