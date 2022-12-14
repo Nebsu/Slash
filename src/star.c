@@ -41,95 +41,126 @@ int isFormat(char * str, char * regEx) {
     return idxStr == -1 && idxReg == -1;
 }
 
-
-int oe (int fd,int i,struct string * path,char ** cmd, char ** st) {
-    DIR * dir = NULL;
-    struct dirent * entry;
-    dir = fdopendir(fd);
-    struct string * s = string_new(PATH_MAX);
-    if (strcmp(path -> data,".") !=  0) {
-      string_append(s,path -> data);
-      string_append(s,"/");
+char ** getPathSplit(char * path) {
+    char ** pathSplit = malloc(sizeof(char *) * 4096);
+    int i = 0;
+    char * token = strtok(path, "/");
+    while (token != NULL) {
+        pathSplit[i] = malloc(sizeof(char) * 4096);
+        strcpy(pathSplit[i], token);
+        i++;
+        token = strtok(NULL, "/");
     }
-    pile * p = pile_init();
-    // int j = 0;
-    // while (st[j] != NULL){
-    //     printf("st[%d] = %s | ",j,st[j]);
-    //     j++;}
-    while ((entry = readdir(dir))) {
-        if(strcmp(entry -> d_name,"..") == 0 || strcmp(entry -> d_name,".") == 0 || entry -> d_name[0] == '.') {
-            continue;
+    pathSplit[i] = NULL;
+    return pathSplit;
+}
+
+char ** getFiles(char * path, char * regEx, char * command) {
+    DIR * dir;
+    struct dirent * ent;
+    char ** files = malloc(sizeof(char *) * 4096);
+    files[0] = malloc(sizeof(char) * 4096);
+    int nbFiles = 1;
+    if ((dir = opendir(path)) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            if (strcmp(ent->d_name,".") == 0 || strcmp(ent->d_name,"..") == 0)continue;
+            if (isFormat(ent->d_name,regEx)) {
+                files = realloc(files, sizeof(char *) * (nbFiles + 2));
+                files[nbFiles] = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
+                strcpy(files[nbFiles],ent->d_name);
+                nbFiles++;
+            }
         }
-        // le fichier est un repertoire on le met dans la pile 
-        if (entry -> d_type == DT_DIR) {
-            struct string * new = string_new(PATH_MAX);
-            string_append(new,path -> data);
-            string_append(new,"/");
-            string_append(new,entry-> d_name);
-            if (isFormat(entry -> d_name, st[1]))
-                empile(p,elem_init(new));
-        }
-        if (isFormat(entry -> d_name, st[1])) {
-        // ajout dans le string le nom du fichier
-            string_append(s,entry -> d_name);
-        // ajout dans cmd le chemin du fichier
-            strcpy(cmd[i++],s -> data);
-        // enleve de s le dernier fichier ajoute
-            string_truncate(s,strlen(entry -> d_name));
-        }
+        closedir(dir);
     }
-
-    // d = tete de la pile
-    elem * d = depile(p);
-    // remove from st the part before the first
-    int res = 0;
-    size_t len = strlen(st[1]);
-    for (size_t i = 0; i < len; i++)
-    {
-        if (st[1][i] == '/') {
-            res = i;
-            break;
-        }
+    else {
+        perror("opendir");
     }
-    st[1] = st[1] + res + 1;
-    printf("st[1] = %s \n",st[1]);
+    return files;
+}
 
+// Lecture -> Repertoire courant -> Si le nom respecte le format -> Ajout dans la liste -> Si il y a un "/" 
+// on ajoute pas les fichiers ordinaires
 
-    while (d) {
-        // ouverture du repertoire en bout de pile
-        int son_fd = open(d -> path -> data,O_RDONLY);
-        i = oe(son_fd,i,d -> path,cmd, st);
-        elem * f = d;
-        d = depile(p);
-        // printf("d -> data = %s\n", d -> path -> data);
-        string_delete(f -> path);
-        free(f);
-    }
+// char ** getFilesRec(char * path, char * regEx) {
+//     DIR * dir;
+//     struct dirent * ent;
+//     char ** files = NULL;
+//     int nbFiles = 0;
+//     if ((dir = opendir(path)) != NULL) {
+//         while ((ent = readdir(dir)) != NULL) {
+//             if (isFormat(ent->d_name,regEx)) {
+//                 files = realloc(files, sizeof(char *) * (nbFiles + 1));
+//                 files[nbFiles] = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
+//                 strcpy(files[nbFiles],ent->d_name);
+//                 nbFiles++;
+//             }
+//             if (ent->d_type == DT_DIR && strcmp(ent->d_name,".") != 0 && strcmp(ent->d_name,"..") != 0) {
+//                 char * newPath = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
+//                 strcpy(newPath,path);
+//                 strcat(newPath,"/");
+//                 strcat(newPath,ent->d_name);
+//                 char ** newFiles = getFilesRec(newPath,regEx);
+//                 int i = 0;
+//                 while (newFiles[i] != NULL) {
+//                     files = realloc(files, sizeof(char *) * (nbFiles + 1));
+//                     files[nbFiles] = malloc(sizeof(char) * (strlen(newFiles[i]) + 1));
+//                     strcpy(files[nbFiles],newFiles[i]);
+//                     nbFiles++;
+//                     i++;
+//                 }
+//             }
+//         }
+//         closedir(dir);
+//     }
+//     else {
+//         perror("opendir");
+//     }
+//     return files;
+// }
 
-    free(p);
-    string_delete(s);
-    closedir(dir);
-    return i;
+int main(int argc, char const *argv[])
+{
+    char * l = "*c";
+    char * l2 = malloc(sizeof(char) * 4096);
+    strcpy(l2,l);
+    char ** files = getPathSplit(l2);
+    char * path = malloc(sizeof(char) * 4096);
+
+    char ** files2 = getFiles(".", files[0], "ls");
+
+    char ** res = malloc(sizeof(char *) * 4096);
+    int i = 0;
+    // while (files[i] != NULL) {
+    //     printf("%s\n",files[i]);
+    //     i++;
+    // }
+    execvp("ls",files2);
+
+    return 0;
 }
 
 
 
-int star (int argc, char ** argv) {
-    int fd = open(".",O_RDONLY);
-    char ** cmd = malloc(sizeof(char *) * 4096);
-    for (int i = 0; i< 4096; i++) {
-      cmd[i] = malloc(sizeof(char) * 4096);
-    }
-    struct string * path = string_new(PATH_MAX);
-    string_append(path, ".");
-    int j = oe(fd,1,path,cmd, argv);
-    cmd[0] = argv[0];
-    cmd[j] = NULL;
-    cmd = realloc(cmd,(j+1)*sizeof(char *));
+// int star (int argc, char ** argv) {
+    // int fd = open(".", O_RDONLY);
+    // //TODO: Separer chaque argument de argv dans un tableau de string apres le "/"
+
+    // char ** cmd = malloc(sizeof(char *) * 4096);
+    // for (int i = 0; i< 4096; i++) {
+    //   cmd[i] = malloc(sizeof(char) * 4096);
+    // }
+    // struct string * path = string_new(PATH_MAX);
+    // string_append(path, ".");
+    // int j = oe(fd,1,path,cmd, argv);
+    // cmd[0] = argv[0];
+
+    // cmd[j] = NULL;
+    // cmd = realloc(cmd,(j+1)*sizeof(char *));
     // for(int i = 0 ; i < j; i++) {
     //   printf("%s \n",cmd[i]);
     // }
-    execvp(cmd[0],cmd);
-    perror("exec");
-    return 0;
-}
+    // execvp(cmd[0],cmd);
+    // perror("exec");
+    // return 0;
+// }
