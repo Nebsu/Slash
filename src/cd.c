@@ -12,6 +12,8 @@
 
 char OLD_PWD [PATH_MAX];
 char five_chars[5];
+char bufferPoint[PATH_MAX];
+char tmpPath [PATH_MAX];
 
 int remove_rep(char *path, int len, int totalLength, int charskipped, int end) {
     int i = len - charskipped;
@@ -73,6 +75,20 @@ char * path_simplificator (char * path,size_t len) {
 char buffer_path [PATH_MAX];
 char tmpEnv [PATH_MAX];
 
+int f (char * path) {
+    int i = 0;
+    while( path[i] != '\0') {
+        // strncpy(five_chars,path + i,5);
+        // printf("fc = %s \n",five_chars);
+        // printf(" char = %c \n", path[i]);
+        if (path[i] == '/') {
+            return i;
+        }
+        i++;
+    }
+    return i;
+}
+
 char * setDirectory(char * path) {
     if (path[0] == '/') {
         strcpy(tmpEnv,path);
@@ -111,9 +127,14 @@ int change_dir(char * path,int physical) {
             strcpy(buffer_path,getenv("OLDPWD"));
         }
         else printf("Pas de répertoire ancien");
-    }
+    } 
     else {
-        d = chdir(path);
+        strcpy(buffer_path,setDirectory(path));
+        d = chdir(buffer_path);
+        if (d == -1) {
+            d = chdir(path);
+            physical = 1;
+        }
     }
     if (d == -1) {
         perror("chdir");
@@ -126,6 +147,7 @@ int change_dir(char * path,int physical) {
     else if( !moins && !home) {
         strcpy(buffer_path,setDirectory(path));
     }
+
     if(strlen(buffer_path) > 1 && buffer_path[strlen(buffer_path) - 1] == '/') buffer_path[strlen(buffer_path) - 1] = '\0';
     setenv("PWD", buffer_path, 1);
     setenv("OLDPWD", OLD_PWD, 1);
