@@ -194,7 +194,6 @@ int main(int argc, char ** argv) {
                     exit(EXIT_FAILURE);
                 case 0:
                     if(cmd->argc > 1){
-                    // A changer -> Detection si il y a une etoile dans les arguments
                         if(cmd->args[1][0] == '*'){
                             star(cmd->argc, cmd->args);
                         }
