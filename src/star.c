@@ -75,7 +75,7 @@ int getFiles(char * path, char ** buf, char * regEx, int i) {
                     while (regEx[tailleReg] != '/' && regEx[tailleReg] != '\0') {
                         tailleReg++;
                     }
-                    printf("1regEx = %s tailleReg = %d fichier = %s\n",regEx,tailleReg, ent->d_name);
+                    // printf("1regEx = %s tailleReg = %d fichier = %s\n",regEx,tailleReg, ent->d_name);
                     if(tailleReg != 0) {
                         buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
                         if(strcmp(path,".") == 0) {
@@ -98,7 +98,7 @@ int getFiles(char * path, char ** buf, char * regEx, int i) {
                     while (regEx[tailleReg] != '/' && regEx[tailleReg] != '\0') {
                         tailleReg++;
                     }
-                    printf("2regEx = %s tailleReg = %d fichier = %s\n",regEx,tailleReg, ent->d_name);
+                    // printf("2regEx = %s tailleReg = %d fichier = %s\n",regEx,tailleReg, ent->d_name);
                     int regexLen = cut(regEx);
                     if(regexLen == strlen(regEx)) {
                         buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
@@ -125,21 +125,21 @@ int getFiles(char * path, char ** buf, char * regEx, int i) {
 
 
 
-int main(int argc, char const *argv[]) {
+int star(int argc, char ** argv) {
     char * path = malloc(sizeof(char) * 4096);
-    path = "src/a/*";
+    path = argv[1];
     char * tmp = malloc(sizeof(char) * 4096);
     int i = cut(path);
     strncpy(tmp,path, i);
     char ** buf = malloc(sizeof(char *) * 4096);
     if(strchr(tmp, '*') != NULL) {
-        printf("tmp = .\n");
-        printf("path = %s\n",tmp);
+        // printf("tmp = .\n");
+        // printf("path = %s\n",tmp);
         getFiles(".",buf,tmp,0);
     }
     else {
-        printf("tmp = %s\n",tmp);
-        printf("path = %s\n",path+i);
+        // printf("tmp = %s\n",tmp);
+        // printf("path = %s\n",path+i);
         getFiles(tmp, buf, path+i, 0);
     }
 
@@ -147,8 +147,8 @@ int main(int argc, char const *argv[]) {
         // printf("Aucun fichier trouvé\n");
     }
     else {
-        execvp("ls",buf);
+        execvp(argv[0],buf);
     }
-
+    return 127;
 }
 
