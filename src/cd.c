@@ -129,8 +129,19 @@ int change_dir(char * path,int physical) {
         else printf("Pas de répertoire ancien");
     } 
     else {
-        strcpy(buffer_path,setDirectory(path));
-        d = chdir(buffer_path);
+       if (physical) {
+            getcwd(buffer_path,PATH_MAX);
+            d = chdir(buffer_path);
+            if(d == -1) {
+                perror("chdir");
+            }
+            d = chdir(path);
+
+        }
+        else {
+            strcpy(buffer_path,setDirectory(path));
+            d = chdir(buffer_path);
+        }
         if (d == -1) {
             d = chdir(path);
             physical = 1;
