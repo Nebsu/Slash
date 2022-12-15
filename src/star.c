@@ -23,6 +23,9 @@ int isFormat(char * str, char * regEx) {
     int regLen = strlen(regEx);
     int idxStr = strLen-1;
     int idxReg = regLen-1;
+    if(regEx[idxReg] == '/') {
+        idxReg--;
+    }
     while ( idxStr >= 0 && idxReg >= 0 ) {
         // printf("char str = %c char regEx = %c \n",str[idxStr],regEx[idxReg]);
         if (regEx[idxReg] == '*') {
@@ -36,10 +39,11 @@ int isFormat(char * str, char * regEx) {
             idxReg--;
         }
     }
+    if(idxReg == 0 && regEx[0] == '*') {
+        return 1;
+    }
     return idxStr == -1 && idxReg == -1;
 }
-
-//tmp
 
 int cut(char * path) {
     int i = 0;
@@ -64,19 +68,17 @@ int getFiles(char * path, char ** buf, char * regEx, int i) {
         while ((ent = readdir(dir)) != NULL) {
             // printf("Lecture de : %s\n", ent->d_name);
             if (strcmp(ent->d_name,".") == 0 || strcmp(ent->d_name,"..") == 0 || ent->d_name[0] == '.')continue;
-            if (isFormat(ent->d_name,regEx) || strcmp(regEx,"") == 0) {
+            char * sousRegex = malloc(sizeof(char) * (strlen(regEx) + 1));
+            int idx = cut(regEx);
+            strncpy(sousRegex,regEx,idx);
+            sousRegex[idx] = '\0';
+            // printf("sousRegex = %s\n",sousRegex);
+            if (isFormat(ent->d_name,sousRegex) || strcmp(sousRegex,"") == 0) {
+                // printf("idx = %d\n",idx);
                 // printf("Lecture de : %s\n", ent->d_name);
                 if(ent->d_type == DT_DIR) {
-                    char * tmp = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
-                    strcpy(tmp,path);
-                    strcat(tmp,"/");
-                    strcat(tmp,ent->d_name);
-                    int tailleReg = 0;
-                    while (regEx[tailleReg] != '/' && regEx[tailleReg] != '\0') {
-                        tailleReg++;
-                    }
-                    // printf("1regEx = %s tailleReg = %d fichier = %s\n",regEx,tailleReg, ent->d_name);
-                    if(tailleReg != 0) {
+                    // printf("1regEx = %s tailleReg = %d dossier = %s\n",regEx,tailleReg, ent->d_name);
+                    if(strlen(regEx) == strlen(sousRegex)) {
                         buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
                         if(strcmp(path,".") == 0) {
                             strcpy(buf[i],ent->d_name);
@@ -89,18 +91,21 @@ int getFiles(char * path, char ** buf, char * regEx, int i) {
                         i++;
                     }
                     else {
-                        i = getFiles(tmp, buf, regEx + tailleReg, i);
+                        char * tmp = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
+                        if(strcmp(path,".") == 0) {
+                            strcpy(tmp,ent->d_name);
+                        }
+                        else {
+                            strcpy(tmp,path);
+                            strcat(tmp,"/");
+                            strcat(tmp,ent->d_name);
+                        }
+                        i = getFiles(tmp, buf, regEx + idx, i);
                     }
                 }
                 else {
-                    //faire detetcion fin
-                    int tailleReg = 0;
-                    while (regEx[tailleReg] != '/' && regEx[tailleReg] != '\0') {
-                        tailleReg++;
-                    }
-                    // printf("2regEx = %s tailleReg = %d fichier = %s\n",regEx,tailleReg, ent->d_name);
-                    int regexLen = cut(regEx);
-                    if(regexLen == strlen(regEx)) {
+                    // printf("2regEx = %s fichier = %s\n",regEx, ent->d_name);
+                    if(strlen(regEx) == strlen(sousRegex)) {
                         buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
                         if(strcmp(path,".") == 0) {
                             strcpy(buf[i],ent->d_name);
@@ -113,6 +118,9 @@ int getFiles(char * path, char ** buf, char * regEx, int i) {
                         i++;
                     }
                 }
+            }
+            else {
+                // printf("non format = %s\n",ent->d_name);
             }
         }
     }
@@ -132,23 +140,9 @@ int star(int argc, char ** argv) {
     int i = cut(path);
     strncpy(tmp,path, i);
     char ** buf = malloc(sizeof(char *) * 4096);
-    if(strchr(tmp, '*') != NULL) {
-        // printf("tmp = .\n");
-        // printf("path = %s\n",tmp);
-        getFiles(".",buf,tmp,0);
-    }
-    else {
-        // printf("tmp = %s\n",tmp);
-        // printf("path = %s\n",path+i);
-        getFiles(tmp, buf, path+i, 0);
-    }
-
-    if(buf[0] == NULL) {
-        // printf("Aucun fichier trouvé\n");
-    }
-    else {
-        execvp(argv[0],buf);
-    }
+    getFiles(".",buf,path,1);
+    buf[0] = argv[0];
+    execvp(argv[0],buf);
     return 127;
 }
 
