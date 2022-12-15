@@ -16,8 +16,6 @@
 #include "pile.h"
 #include "star.h"
 
-
-
 char buff [4096] [4096];
 char * pp = "..";
 
@@ -68,6 +66,7 @@ char ** getFiles(char * path, char ** regExlist, char * list, char * command, in
     // Stockage du parcours
     char ** newFiles = malloc(sizeof(char *) * 4096);
     files[0] = malloc(sizeof(char) * 4096);
+    files[0] = command;
     // Copie du chemin actuel pour pouvoir le modifier
     char * pathcpy = malloc(sizeof(char) * 4096);
     // Indice du tableau de String
@@ -90,14 +89,16 @@ char ** getFiles(char * path, char ** regExlist, char * list, char * command, in
     printf("isD = %d\n", isD);
     if ((dir = opendir(path)) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
+            // printf("Lecture de : %s\n", ent->d_name);
             if (strcmp(ent->d_name,".") == 0 || strcmp(ent->d_name,"..") == 0 || ent->d_name[0] == '.')continue;
             if (isFormat(ent->d_name,regExlist[depth])) {
                 // Si c'est un dossier et qu'il n y a pas de / a la fin de la regex
                 if (ent->d_type == DT_DIR && isDir == 0) {
-                    files = realloc(files, sizeof(char *) * (nbFiles + 2));
+                    files = realloc(files, sizeof(char *) * 4096);
                     files[nbFiles] = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
                     strcpy(files[nbFiles],ent->d_name);
                     strcat(files[nbFiles],"/");
+                    strcat(path, "/");
                     strcpy(pathcpy, path);
                     strcat(pathcpy,files[nbFiles]);
                     printf("path = %s\n",pathcpy);
@@ -109,9 +110,9 @@ char ** getFiles(char * path, char ** regExlist, char * list, char * command, in
                 } 
                 // Si c'est un fichier et qu'il n y a pas de / a la fin de la regex
                 else if (isDir == 1) {
-                    files = realloc(files, sizeof(char *) * (nbFiles + 2));
+                    files = realloc(files, sizeof(char *) * (4096));
                     files[nbFiles] = malloc(sizeof(char) * (4096));
-                    strcpy(files[nbFiles],path);
+                    // strcpy(files[nbFiles],path);
                     strcat(files[nbFiles],ent->d_name);
                     nbFiles++;
                 }
@@ -135,61 +136,25 @@ char ** getFiles(char * path, char ** regExlist, char * list, char * command, in
 // Lecture -> Repertoire courant -> Si le nom respecte le format -> Ajout dans la liste -> Si il y a un "/" 
 // on ajoute pas les fichiers ordinaires
 
-// char ** getFilesRec(char * path, char * regEx) {
-//     DIR * dir;
-//     struct dirent * ent;
-//     char ** files = NULL;
-//     int nbFiles = 0;
-//     if ((dir = opendir(path)) != NULL) {
-//         while ((ent = readdir(dir)) != NULL) {
-//             if (isFormat(ent->d_name,regEx)) {
-//                 files = realloc(files, sizeof(char *) * (nbFiles + 1));
-//                 files[nbFiles] = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
-//                 strcpy(files[nbFiles],ent->d_name);
-//                 nbFiles++;
-//             }
-//             if (ent->d_type == DT_DIR && strcmp(ent->d_name,".") != 0 && strcmp(ent->d_name,"..") != 0) {
-//                 char * newPath = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
-//                 strcpy(newPath,path);
-//                 strcat(newPath,"/");
-//                 strcat(newPath,ent->d_name);
-//                 char ** newFiles = getFilesRec(newPath,regEx);
-//                 int i = 0;
-//                 while (newFiles[i] != NULL) {
-//                     files = realloc(files, sizeof(char *) * (nbFiles + 1));
-//                     files[nbFiles] = malloc(sizeof(char) * (strlen(newFiles[i]) + 1));
-//                     strcpy(files[nbFiles],newFiles[i]);
-//                     nbFiles++;
-//                     i++;
-//                 }
-//             }
-//         }
-//         closedir(dir);
-//     }
-//     else {
-//         perror("opendir");
-//     }
-//     return files;
-// }
 
 
 int main(int argc, char const *argv[])
 {
-    char * l = "*/*";
+    char * l = "*";
     char * l2 = malloc(sizeof(char) * 4096);
     strcpy(l2,l);
     char ** files = getPathSplit(l2);
     char * path = malloc(sizeof(char) * 4096);
-    strcat(path,"./");
+    strcat(path,".");
 
     char ** files2 = getFiles(path, files, l,"ls", isDirectory(files, l, 0), 0);
 
     char ** res = malloc(sizeof(char *) * 4096);
     int i = 0;
-    while (files2[i] != NULL) {
-        printf("%s\n",files2[i]);
-        i++;
-    }
+    // while (files2[i] != NULL) {
+    //     printf("%s\n",files2[i]);
+    //     i++;
+    // }
     execvp("ls",files2);
 
     return 0;
