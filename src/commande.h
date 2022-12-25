@@ -14,3 +14,16 @@ void free_commande(commande *cmd) {
     free(cmd);
 }
 
+typedef struct commandeListe {
+    commande **cList;
+    int nbCmd;
+} commandeListe;
+
+void printCom(commande *cmd) {
+    printf("cmd =  %s \n",cmd -> cmd);
+    printf("args : ");
+    for (int i = 0; i < cmd -> argc; i++) {
+        printf(" %s ",cmd -> args[i]);
+    }
+    printf("\n");
+}

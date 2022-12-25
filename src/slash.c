@@ -27,7 +27,7 @@ void nb_mots(char *str, commande * cmd) {
     int i = 0;
     int nb = 0;
     bool space = true;
-    while (str[i] != '\0') {
+    while (str[i] != '\0' && str[i] != '|') {
         if (str[i] == ' ') {
             space = true;
         }
@@ -44,6 +44,17 @@ void nb_mots(char *str, commande * cmd) {
     }
     cmd -> argc = nb;
 }
+
+int nbChar(char * buffer,char c) {
+    int i = 0;
+    int acc = 0;
+    while(buffer[i] != '\0') {
+        if (buffer[i] == c) acc++;
+        i++;
+    }
+    return acc;
+}
+
 
 commande * getCommand(char * buffer) {
     commande * cmd;
@@ -63,8 +74,9 @@ commande * getCommand(char * buffer) {
     int j = 0;
     int k = 0;
     while (buffer[i] != '\0') {
-        if (buffer[i] == ' ') {
+        if (buffer[i] == ' ' || buffer[i] == '|') {
             if (j != 0) {
+                printf(" k = %d , i = %d, char = %c malloc \n",k,i,buffer[i]);
                 cmd->args[k] = malloc(sizeof(char) * (j + 1));
                 if(cmd->args[k] == NULL) {
                     perror("malloc");
@@ -75,13 +87,16 @@ commande * getCommand(char * buffer) {
                 k++;
                 j = 0;
             }
+                if (buffer[i] == '|') break;
         }
         else {
             j++;
         }
         i++;
     }
-    if (j != 0) {
+
+    if (j != 0 && buffer[i] != '|') {
+        printf("suite \n");
         cmd->args[k] = malloc(sizeof(char) * (j + 1));
         if(cmd->args[k] == NULL) {
             perror("malloc");
@@ -94,6 +109,44 @@ commande * getCommand(char * buffer) {
     }
     cmd->cmd = cmd->args[0];
     return cmd;
+}
+
+commandeListe * getCommandList(char * buffer) {
+    int nbPipe = nbChar(buffer,'|');
+    commandeListe * cmdList = malloc (sizeof(cmdList));
+    if (!cmdList) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+    cmdList -> nbCmd = nbPipe + 1;
+    cmdList -> cList = malloc(sizeof(commande *) * cmdList -> nbCmd);
+    if (!cmdList -> cList) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < nbPipe; i++) {
+        cmdList-> cList[i] = malloc(sizeof(commande));
+        if (!cmdList -> cList[i]) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    int index = 0;
+    int len = strlen(buffer);
+    for (int i = 0;i < len;i++) {
+        cmdList -> cList[index++] = getCommand(buffer + i);
+        while (i < len && buffer[i] != '|') {
+            // printf("char %c, %ld\n",buffer[i],strlen(buffer));
+            i++;
+        }
+        // printf("proch comm \n");
+    }
+    for (int j = 0;j < cmdList -> nbCmd; j++) {
+        // printf("Arg : %s \n",cmdList -> cList[j] -> cmd );
+        printCom(cmdList->cList[j]);
+    }
+    return cmdList;
 }
 
 char * promptFormat() {
@@ -159,6 +212,7 @@ int main(int argc, char ** argv) {
         }
         add_history (line);
         free(buffer);
+        getCommandList(line);
         commande * cmd = getCommand(line);
         if (strcmp(cmd->cmd, "exit") == 0) {
             if(cmd->argc > 2) {
