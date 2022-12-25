@@ -55,6 +55,24 @@ int nbChar(char * buffer,char c) {
     return acc;
 }
 
+int ** createPipes(int n) {
+    int **pipeTab = malloc(n*sizeof(int *));
+    for (int i = 0;i < n ; i++) {
+        pipeTab[i] = malloc (2 * sizeof(int));
+        if (pipe(pipeTab[i]) == -1) {
+            perror("pipe");
+            exit(EXIT_FAILURE);
+        }
+    }
+    return pipeTab;
+}
+
+void freePipes(int ** pipeTab,int n) {
+    for (int i = 0;i < n; i++) {
+        free(pipeTab[i]);
+    }
+}
+
 
 commande * getCommand(char * buffer) {
     commande * cmd;
@@ -113,7 +131,8 @@ commande * getCommand(char * buffer) {
 
 commandeListe * getCommandList(char * buffer) {
     int nbPipe = nbChar(buffer,'|');
-    commandeListe * cmdList = malloc (sizeof(cmdList));
+    commandeListe *cmdList;
+    cmdList = malloc (sizeof(commandeListe));
     if (!cmdList) {
         perror("malloc");
         exit(EXIT_FAILURE);
@@ -200,6 +219,8 @@ int main(int argc, char ** argv) {
     }
     rl_outstream = stderr;
     while(1) {
+        int tmpStdin = dup(STDIN_FILENO);
+        int tmpStdout = dup(STDOUT_FILENO);
         line = readline (promptFormat());
         if(line == NULL) {
             free(buffer);
@@ -212,7 +233,7 @@ int main(int argc, char ** argv) {
         }
         add_history (line);
         free(buffer);
-        getCommandList(line);
+        commandeListe * cmdList = getCommandList(line);
         commande * cmd = getCommand(line);
         if (strcmp(cmd->cmd, "exit") == 0) {
             if(cmd->argc > 2) {
@@ -241,29 +262,61 @@ int main(int argc, char ** argv) {
             free_commande(cmd);
         }
         else {
-            int n;
-            switch (n = fork()) {
-                case -1:
+            int ** pipeTab = createPipes(cmdList -> nbCmd);
+            for (int i = 0;i < cmdList -> nbCmd; i++) {
+                int n;
+              
+                switch (n = fork()) {
+                    case -1:
                     perror("fork");
                     exit(EXIT_FAILURE);
-                case 0:
-                    if(cmd->argc > 1){
-                    // A changer -> Detection si il y a une etoile dans les arguments
-                        if(strchr(cmd->args[1],'*')){
-                            star(cmd->argc, cmd->args);
-                        }
+                    case 0 :
+                    if(i < cmdList -> nbCmd - 1 ){
+                        close(pipeTab[i][0]);
+                        dup2(pipeTab[i][1],1);
+                        close(pipeTab[i][1]);
                     }
-                    execvp(cmd->cmd, cmd->args);
+                    execvp(cmdList -> cList[i] -> cmd,cmdList -> cList[i] -> args);
+                    // execvp(cmdList -> cList[i] -> cmd,cmdList -> cList[i] -> args);
                     printf("%sCommande inexistante%s\n",ROUGE,BLANC);
                     free_commande(cmd);
                     return 127;
                     break;
-                default:
-                    wait(&n);
+                    perror("exec");
+                    default : wait(&n);
                     val_retour = WEXITSTATUS(n);
-                    free_commande(cmd);
-                    break;
+                    close(pipeTab[i][1]);
+                    dup2(pipeTab[i][0],0);
+                    close(pipeTab[i][0]);
+                }
             }
+            dup2(tmpStdin,STDIN_FILENO);
+            dup2(tmpStdout,STDOUT_FILENO);
+            freePipes(pipeTab,cmdList -> nbCmd);
+            free_commande_list(cmdList);
+            // int n;
+            // switch (n = fork()) {
+            //     case -1:
+            //         perror("fork");
+            //         exit(EXIT_FAILURE);
+            //     case 0:
+            //         if(cmd->argc > 1){
+            //         // A changer -> Detection si il y a une etoile dans les arguments
+            //             if(strchr(cmd->args[1],'*')){
+            //                 star(cmd->argc, cmd->args);
+            //             }
+            //         }
+            //         execvp(cmd->cmd, cmd->args);
+                    // printf("%sCommande inexistante%s\n",ROUGE,BLANC);
+                    // free_commande(cmd);
+                    // return 127;
+                    // break;
+            //     default:
+            //         wait(&n);
+            //         val_retour = WEXITSTATUS(n);
+            //         free_commande(cmd);
+            //         break;
+            // }
         }
         free(line);
     }

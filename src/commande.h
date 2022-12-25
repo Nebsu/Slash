@@ -27,3 +27,10 @@ void printCom(commande *cmd) {
     }
     printf("\n");
 }
+
+void free_commande_list(commandeListe * cmdList) {
+    for (int i = 0;i < cmdList -> nbCmd; i++) {
+        free_commande(cmdList -> cList[i]);
+    }
+    free(cmdList);
+}
