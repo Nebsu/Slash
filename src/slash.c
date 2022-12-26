@@ -71,6 +71,7 @@ void freePipes(int ** pipeTab,int n) {
     for (int i = 0;i < n; i++) {
         free(pipeTab[i]);
     }
+    free(pipeTab);
 }
 
 
@@ -94,7 +95,7 @@ commande * getCommand(char * buffer) {
     while (buffer[i] != '\0') {
         if (buffer[i] == ' ' || buffer[i] == '|') {
             if (j != 0) {
-                printf(" k = %d , i = %d, char = %c malloc \n",k,i,buffer[i]);
+                // printf(" k = %d , i = %d, char = %c malloc \n",k,i,buffer[i]);
                 cmd->args[k] = malloc(sizeof(char) * (j + 1));
                 if(cmd->args[k] == NULL) {
                     perror("malloc");
@@ -114,7 +115,7 @@ commande * getCommand(char * buffer) {
     }
 
     if (j != 0 && buffer[i] != '|') {
-        printf("suite \n");
+        // printf("suite \n");
         cmd->args[k] = malloc(sizeof(char) * (j + 1));
         if(cmd->args[k] == NULL) {
             perror("malloc");
@@ -139,16 +140,10 @@ commandeListe * getCommandList(char * buffer) {
     }
     cmdList -> nbCmd = nbPipe + 1;
     cmdList -> cList = malloc(sizeof(commande *) * cmdList -> nbCmd);
+    printf("nbPipe = %d, tailleList = %d\n",nbPipe,cmdList -> nbCmd);
     if (!cmdList -> cList) {
         perror("malloc");
         exit(EXIT_FAILURE);
-    }
-    for (int i = 0; i < nbPipe; i++) {
-        cmdList-> cList[i] = malloc(sizeof(commande));
-        if (!cmdList -> cList[i]) {
-            perror("malloc");
-            exit(EXIT_FAILURE);
-        }
     }
 
     int index = 0;
@@ -160,10 +155,6 @@ commandeListe * getCommandList(char * buffer) {
             i++;
         }
         // printf("proch comm \n");
-    }
-    for (int j = 0;j < cmdList -> nbCmd; j++) {
-        // printf("Arg : %s \n",cmdList -> cList[j] -> cmd );
-        printCom(cmdList->cList[j]);
     }
     return cmdList;
 }
@@ -234,32 +225,33 @@ int main(int argc, char ** argv) {
         add_history (line);
         free(buffer);
         commandeListe * cmdList = getCommandList(line);
-        commande * cmd = getCommand(line);
-        if (strcmp(cmd->cmd, "exit") == 0) {
-            if(cmd->argc > 2) {
+        // commande * cmd = getCommand(line);
+        if (strcmp(cmdList->cList[0]->cmd, "exit") == 0) {
+            if(cmdList->cList[0]->argc > 2) {
                 printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
                 val_retour = 1;
-                free_commande(cmd);
+                free_commande_list(cmdList);
                 free(line);
                 continue;
             }
-            else if(cmd->argc != 1) {
-                val_retour = atoi(cmd->args[1]);
+            else if(cmdList->cList[0]->argc != 1) {
+                val_retour = atoi(cmdList->cList[0]->args[1]);
             }
-            free_commande(cmd);
+            free_commande_list(cmdList);
             break;
         }
-        else if(strcmp(cmd->cmd, "pwd") == 0) {
-            val_retour = pwd(cmd->argc, cmd->args);
-            free_commande(cmd);
+        else if(strcmp(cmdList->cList[0]->cmd, "pwd") == 0) {
+            val_retour = pwd(cmdList->cList[0]->argc, cmdList->cList[0]->args);
+
+            free_commande_list(cmdList);
         }
-        else if(strcmp(cmd->cmd, "cd") == 0) {
-            val_retour = cd(cmd->argc, cmd->args);
-            free_commande(cmd);
+        else if(strcmp(cmdList->cList[0]->cmd, "cd") == 0) {
+            val_retour = cd(cmdList->cList[0]->argc, cmdList->cList[0]->args);
+            free_commande_list(cmdList);
         }
-        else if(strcmp(cmd->cmd, "false") == 0) {
+        else if(strcmp(cmdList->cList[0]->cmd, "false") == 0) {
             val_retour = 1;
-            free_commande(cmd);
+            free_commande_list(cmdList);
         }
         else {
             int ** pipeTab = createPipes(cmdList -> nbCmd);
@@ -279,7 +271,8 @@ int main(int argc, char ** argv) {
                     execvp(cmdList -> cList[i] -> cmd,cmdList -> cList[i] -> args);
                     // execvp(cmdList -> cList[i] -> cmd,cmdList -> cList[i] -> args);
                     printf("%sCommande inexistante%s\n",ROUGE,BLANC);
-                    free_commande(cmd);
+                    freePipes(pipeTab,cmdList -> nbCmd);
+                    free_commande_list(cmdList);
                     return 127;
                     break;
                     perror("exec");
