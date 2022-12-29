@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
+#include <fcntl.h>
 
 #define MAX_ARGS_STRLEN 4096
 #define ROUGE "\033[91m"
@@ -105,7 +106,7 @@ commande * getCommand(char * buffer) {
                 k++;
                 j = 0;
             }
-                if (buffer[i] == '|') break;
+            if (buffer[i] == '|') break;
         }
         else {
             j++;
@@ -219,7 +220,156 @@ int main(int argc, char ** argv) {
         free(buffer);
         commandeListe * cmdList = getCommandList(line);
         int ** pipeTab = createPipes(cmdList -> nbCmd);
-        for (int i = 0;i < cmdList -> nbCmd; i++) {
+        int input_fd = STDIN_FILENO;
+        int output_fd = STDOUT_FILENO;
+        int err_fd = STDERR_FILENO;
+        for (int i = 0; i < cmdList -> nbCmd; i++) {
+            // Detection redirection
+            if (cmdList -> cList[i] -> argc > 2){
+                for (int j = 0; j < cmdList -> cList[i] -> argc; j++) {
+                    if (strcmp(cmdList -> cList[i] -> args[j], "<") == 0) {
+                        if (input_fd != 0) {
+                            perror("Erreur de redirection");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        input_fd = open(cmdList -> cList[i] -> args[j + 1], O_RDONLY);
+                        if (input_fd == -1) {
+                            perror("open");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        //Recréation de la commande avant la redirection
+                        for (int k = j; k < cmdList -> cList[i] -> argc - 2; k++) {
+                            cmdList -> cList[j]-> args[k] = cmdList -> cList[j] ->args[k + 2];
+                        }
+                        cmdList -> cList[i] -> argc -= 2;
+                        cmdList -> cList[i] -> args[cmdList -> cList[i] -> argc] = NULL;
+                        j--;
+
+                    }else if (strcmp(cmdList -> cList[i] -> args[j], ">") == 0) {
+
+                        if (output_fd != 1) {
+                            perror("Erreur de redirection");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        output_fd = open(cmdList -> cList[i] -> args[j + 1], O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0664);
+                        if (output_fd == -1) {
+                            perror("open");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        for (int k = j; k < cmdList -> cList[i] -> argc - 2; k++) {
+                            cmdList -> cList[j]-> args[k] = cmdList -> cList[j] ->args[k + 2];
+                        }
+                        cmdList -> cList[i] -> argc -= 2;
+                        cmdList -> cList[i] -> args[cmdList -> cList[i] -> argc] = NULL;
+                        j--;
+
+                    }else if (strcmp(cmdList -> cList[i] -> args[j], ">>") == 0) {
+
+                        if (output_fd != 1) {
+                            perror("Erreur de redirection");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        output_fd = open(cmdList -> cList[i] -> args[j + 1], O_WRONLY | O_CREAT | O_APPEND, 0664);
+                        if (output_fd == -1) {
+                            perror("open");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        for (int k = j; k < cmdList -> cList[i] -> argc - 2; k++) {
+                            cmdList -> cList[j]-> args[k] = cmdList -> cList[j] ->args[k + 2];
+                        }
+                        cmdList -> cList[i] -> argc -= 2;
+                        cmdList -> cList[i] -> args[cmdList -> cList[i] -> argc] = NULL;
+                        j--;
+
+                    }else if (strcmp(cmdList -> cList[i] -> args[j], ">|") == 0) {
+                        printf("test\n");
+                        if (output_fd != 1) {
+                            perror("Erreur de redirection");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        output_fd = open(cmdList -> cList[i] -> args[j + 1], O_WRONLY | O_CREAT | O_TRUNC, 0664);
+                        if (output_fd == -1) {
+                            perror("open");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        for (int k = j; k < cmdList -> cList[i] -> argc - 2; k++) {
+                            cmdList -> cList[j]-> args[k] = cmdList -> cList[j] ->args[k + 2];
+                        }
+                        cmdList -> cList[i] -> argc -= 2;
+                        cmdList -> cList[i] -> args[cmdList -> cList[i] -> argc] = NULL;
+                        j--;
+
+                    }else if (strcmp(cmdList -> cList[i] -> args[j], "2>") == 0) {
+
+                        if (err_fd != 2) {
+                            perror("Erreur de redirection");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        err_fd = open(cmdList -> cList[i] -> args[j + 1], O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0664);
+                        if (err_fd == -1) {
+                            perror("open");
+                            val_retour = 1;
+                            goto fin;
+                        }  
+                        for (int k = j; k < cmdList -> cList[i] -> argc - 2; k++) {
+                            cmdList -> cList[j]-> args[k] = cmdList -> cList[j] ->args[k + 2];
+                        }
+                        cmdList -> cList[i] -> argc -= 2;
+                        cmdList -> cList[i] -> args[cmdList -> cList[i] -> argc] = NULL;
+                        j--;
+
+                    }else if (strcmp(cmdList -> cList[i] -> args[j], "2>>") == 0) {
+
+                        if (err_fd != 2) {
+                            perror("Erreur de redirection");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        err_fd = open(cmdList -> cList[i] -> args[j + 1], O_WRONLY | O_CREAT | O_APPEND, 0664);
+                        if (err_fd == -1) {
+                            perror("open");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        for (int k = j; k < cmdList -> cList[i] -> argc - 2; k++) {
+                            cmdList -> cList[j]-> args[k] = cmdList -> cList[j] ->args[k + 2];
+                        }
+                        cmdList -> cList[i] -> argc -= 2;
+                        cmdList -> cList[i] -> args[cmdList -> cList[i] -> argc] = NULL;
+                        j--;
+
+                    }else if (strcmp(cmdList -> cList[i] -> args[j], "2>|") == 0) {
+
+                        if (err_fd != 2) {
+                            perror("Erreur de redirection");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        err_fd = open(cmdList -> cList[i] -> args[j + 1], O_WRONLY | O_CREAT | O_TRUNC, 0664);
+                        if (err_fd == -1) {
+                            perror("open");
+                            val_retour = 1;
+                            goto fin;
+                        }
+                        for (int k = j; k < cmdList -> cList[i] -> argc - 2; k++) {
+                            cmdList -> cList[j]-> args[k] = cmdList -> cList[j] ->args[k + 2];
+                        }
+                        cmdList -> cList[i] -> argc -= 2;
+                        cmdList -> cList[i] -> args[cmdList -> cList[i] -> argc] = NULL;
+                        j--;
+                        
+                    }
+                }
+            } 
             if (strcmp(cmdList->cList[i]->cmd, "exit") == 0) {
                 if(cmdList->cList[i]->argc > 2) {
                     printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
@@ -253,9 +403,12 @@ int main(int argc, char ** argv) {
                         close(pipeTab[i][1]);
                     }
                     if(strcmp(cmdList->cList[i]->cmd, "pwd") == 0) {
-                        val_retour = pwd(cmdList->cList[i]->argc, cmdList->cList[i]->args);
+                        val_retour = pwd(cmdList->cList[i]->argc, cmdList->cList[i]->args, output_fd);
                     }
                     else {
+                        dup2(input_fd, STDIN_FILENO);
+                        dup2(output_fd, STDOUT_FILENO);
+                        dup2(err_fd, STDERR_FILENO);
                         execvp(cmdList -> cList[i] -> cmd,cmdList -> cList[i] -> args);
                         printf("%sCommande inexistante%s\n",ROUGE,BLANC);
                         freePipes(pipeTab,cmdList -> nbCmd);
@@ -272,6 +425,7 @@ int main(int argc, char ** argv) {
                 }
             }
         }
+        fin :
         dup2(tmpStdin,STDIN_FILENO);
         dup2(tmpStdout,STDOUT_FILENO);
         freePipes(pipeTab,cmdList -> nbCmd);
@@ -279,4 +433,4 @@ int main(int argc, char ** argv) {
         free(line);
     }
     return val_retour;
-}
+} 
