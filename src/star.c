@@ -141,16 +141,19 @@ int getFiles(char * path, char ** buf, char * regEx, int i) {
     return i;
 }
 
-int star(int argc, char ** argv) {
+char** star(int argc, char ** argv) {
     char ** buf = malloc(sizeof(char *) * 4096);
     buf[0] = argv[0];
     int j = 1;
     for(int i = 1; i < argc; i++) {
+        printf("argument %d : %s \n",i,argv[i]);
         char * regEx = malloc(sizeof(char) * 4096);
-        regEx = argv[i];
+        strcpy(regEx,argv[i]);
         j = getFiles(".",buf,regEx,j);
     }
-    execvp(argv[0],buf);
-    return 127;
+    for(int i = 0; i < 5; i++) {
+        printf("arg : %s \n",buf[i]);
+    }
+    return buf;
 }
 
