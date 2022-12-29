@@ -23,6 +23,7 @@
 static char *line = (char *)NULL;
 int val_retour = 0;
 char * buffer = NULL;
+char deuxChar [2];
 
 void nb_mots(char *str, commande * cmd) {
     int i = 0;
@@ -54,6 +55,23 @@ int nbChar(char * buffer,char c) {
         i++;
     }
     return acc;
+}
+
+int nbPipes(char * buffer) {
+    int i = 0;
+    int acc = 0;
+    int len = strlen(buffer);
+    while(buffer[i] != '\0') {
+        if (i < len -1) {
+            strncpy(deuxChar,buffer + i,2);
+            if (strcmp(deuxChar,">|") == 0) {
+                i+=2; continue;
+            }
+        }
+        if (buffer[i] == '|') acc++;
+        i++;
+    }
+    return acc; 
 }
 
 int ** createPipes(int n) {
@@ -94,6 +112,10 @@ commande * getCommand(char * buffer) {
     int j = 0;
     int k = 0;
     while (buffer[i] != '\0') {
+        strncpy(deuxChar,buffer + i,2);
+        if (strcmp(deuxChar,">|") == 0) {
+            i+=2; continue;
+        }
         if (buffer[i] == ' ' || buffer[i] == '|') {
             if (j != 0) {
                 cmd->args[k] = malloc(sizeof(char) * (j + 1));
@@ -130,7 +152,8 @@ commande * getCommand(char * buffer) {
 }
 
 commandeListe * getCommandList(char * buffer) {
-    int nbPipe = nbChar(buffer,'|');
+    int nbPipe = nbPipes(buffer);
+    printf(" nb Pipe %d \n",nbPipe);
     commandeListe *cmdList;
     cmdList = malloc (sizeof(commandeListe));
     if (!cmdList) {
@@ -148,7 +171,15 @@ commandeListe * getCommandList(char * buffer) {
     int len = strlen(buffer);
     for (int i = 0;i < len;i++) {
         cmdList -> cList[index++] = getCommand(buffer + i);
-        while (i < len && buffer[i] != '|') i++;
+        while (i < len && buffer[i] != '|') {
+            if (i < len - 2) {
+                strncpy(deuxChar,buffer + i,2);
+                if (strcmp(deuxChar,">|") == 0) {
+                    i+=2; continue;
+                }
+            }
+            i++;
+        }
     }
     return cmdList;
 }
@@ -397,15 +428,17 @@ int main(int argc, char ** argv) {
                     perror("fork");
                     exit(EXIT_FAILURE);
                     case 0 :
+                    printCom(cmdList -> cList[i]);
                     if(i < cmdList -> nbCmd - 1 ){
                         close(pipeTab[i][0]);
                         dup2(pipeTab[i][1],1);
                         close(pipeTab[i][1]);
                     }
+                    // char ** buff = star(cmdList -> cList[i] -> argc,cmdList -> cList[i] -> args);
                     if(strcmp(cmdList->cList[i]->cmd, "pwd") == 0) {
                         val_retour = pwd(cmdList->cList[i]->argc, cmdList->cList[i]->args, output_fd);
                     }
-                    else {
+                    else {  
                         dup2(input_fd, STDIN_FILENO);
                         dup2(output_fd, STDOUT_FILENO);
                         dup2(err_fd, STDERR_FILENO);
