@@ -108,6 +108,7 @@ commande * getCommand(char * buffer) {
     }
     cmd -> option = 0;
     nb_mots(buffer, cmd);
+    printf("cmd argc = %d \n",cmd -> argc);
     if((cmd->args = malloc(sizeof(char *) * (cmd -> argc + 1))) == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
@@ -118,7 +119,7 @@ commande * getCommand(char * buffer) {
     int j = 0;
     int k = 0;
     while (buffer[i] != '\0') {
-        if (buffer[i] == ' ' || buffer[i] == '|') {
+        if (buffer[i] == ' ' || (buffer[i] == '|')) {
             if (j != 0) {
                 cmd->args[k] = malloc(sizeof(char) * (j + 1));
                 if(cmd->args[k] == NULL) {
@@ -135,8 +136,7 @@ commande * getCommand(char * buffer) {
         else {
             strncpy(deuxChar,buffer + i,2);
             if (strcmp(deuxChar,">|") == 0) {
-                i++;
-                j++;
+                    i++;j++;                
             }
             j++;
         }
@@ -160,7 +160,7 @@ commande * getCommand(char * buffer) {
 
 commandeListe * getCommandList(char * buffer) {
     int nbPipe = nbPipes(buffer);
-    // printf(" nb Pipe %d \n",nbPipe);
+    printf(" nb Pipe %d \n",nbPipe);
     commandeListe *cmdList;
     cmdList = malloc (sizeof(commandeListe));
     if (!cmdList) {
@@ -288,11 +288,7 @@ int main(int argc, char ** argv) {
         for (int i = 0; i < cmdList -> nbCmd; i++) {
             // Detection redirection
             if (cmdList -> cList[i] -> argc > 2){
-                printCom(cmdList -> cList[i]);
                 val_retour = redirect(input_fd, output_fd, err_fd, cmdList -> cList[i]);
-                if (val_retour == 1) {
-                    goto fin;
-                }
             } 
             if (strcmp(cmdList->cList[i]->cmd, "exit") == 0) {
                 if(cmdList->cList[i]->argc > 2) {
@@ -321,7 +317,7 @@ int main(int argc, char ** argv) {
                     perror("fork");
                     exit(EXIT_FAILURE);
                     case 0 :
-                    // printCom(cmdList -> cList[i]);
+                    printCom(cmdList -> cList[i]);
                     if(i < cmdList -> nbCmd - 1 ){
                         close(pipeTab[i][0]);
                         dup2(pipeTab[i][1],1);
@@ -345,7 +341,6 @@ int main(int argc, char ** argv) {
                     default :
                     wait(&n);
                     if(sigIntercept ==0 ) val_retour = WEXITSTATUS(n);
-                    fin:
                     close(pipeTab[i][1]);
                     dup2(pipeTab[i][0],0);
                     close(pipeTab[i][0]);
