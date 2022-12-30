@@ -154,7 +154,7 @@ commande * getCommand(char * buffer) {
 
 commandeListe * getCommandList(char * buffer) {
     int nbPipe = nbPipes(buffer);
-    printf(" nb Pipe %d \n",nbPipe);
+    // printf(" nb Pipe %d \n",nbPipe);
     commandeListe *cmdList;
     cmdList = malloc (sizeof(commandeListe));
     if (!cmdList) {
@@ -261,7 +261,11 @@ int main(int argc, char ** argv) {
         for (int i = 0; i < cmdList -> nbCmd; i++) {
             // Detection redirection
             if (cmdList -> cList[i] -> argc > 2){
+                printCom(cmdList -> cList[i]);
                 val_retour = redirect(input_fd, output_fd, err_fd, cmdList -> cList[i]);
+                if (val_retour == 1) {
+                    goto fin;
+                }
             } 
             if (strcmp(cmdList->cList[i]->cmd, "exit") == 0) {
                 if(cmdList->cList[i]->argc > 2) {
@@ -290,7 +294,7 @@ int main(int argc, char ** argv) {
                     perror("fork");
                     exit(EXIT_FAILURE);
                     case 0 :
-                    printCom(cmdList -> cList[i]);
+                    // printCom(cmdList -> cList[i]);
                     if(i < cmdList -> nbCmd - 1 ){
                         close(pipeTab[i][0]);
                         dup2(pipeTab[i][1],1);
@@ -314,6 +318,7 @@ int main(int argc, char ** argv) {
                     default :
                     wait(&n);
                     val_retour = WEXITSTATUS(n);
+                    fin:
                     close(pipeTab[i][1]);
                     dup2(pipeTab[i][0],0);
                     close(pipeTab[i][0]);

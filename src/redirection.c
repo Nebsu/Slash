@@ -44,7 +44,7 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
             i--;
 
         }else if (strcmp(cmd -> args[i], ">>") == 0) {
-
+            printf("yo\n");
             if (*output_fd != 1) {
                 perror("Erreur de redirection");
                 return 1;
@@ -62,7 +62,7 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
             i--;
 
         }else if (strcmp(cmd -> args[i], ">|") == 0) {
-            printf("test\n");
+            printf("yo\n");
             if (*output_fd != 1) {
                 perror("Erreur de redirection");
                 return 1;
