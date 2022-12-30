@@ -285,9 +285,11 @@ int main(int argc, char ** argv) {
         *err_fd = STDERR_FILENO;
         sig_hand();
         for (int i = 0; i < cmdList -> nbCmd; i++) {
-            // Detection redirection
             if (cmdList -> cList[i] -> argc > 2){
                 val_retour = redirect(input_fd, output_fd, err_fd, cmdList -> cList[i]);
+                if (val_retour == 1){
+                    goto end;
+                }
             } 
             if (strcmp(cmdList->cList[i]->cmd, "exit") == 0) {
                 if(cmdList->cList[i]->argc > 2) {
@@ -344,6 +346,7 @@ int main(int argc, char ** argv) {
                     default :
                     wait(&n);
                     if(sigIntercept ==0 ) val_retour = WEXITSTATUS(n);
+                    end:
                     close(pipeTab[i][1]);
                     dup2(pipeTab[i][0],0);
                     close(pipeTab[i][0]);
