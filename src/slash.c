@@ -288,7 +288,7 @@ int main(int argc, char ** argv) {
         for (int i = 0; i < cmdList -> nbCmd; i++) {
             // Detection redirection
             if (cmdList -> cList[i] -> argc > 2){
-                printCom(cmdList -> cList[i]);
+                // printCom(cmdList -> cList[i]);
                 val_retour = redirect(input_fd, output_fd, err_fd, cmdList -> cList[i]);
                 if (val_retour == 1) {
                     goto fin;
@@ -358,6 +358,9 @@ int main(int argc, char ** argv) {
         freePipes(pipeTab,cmdList -> nbCmd);
         free_commande_list(cmdList);
         free(line);
+        free(input_fd);
+        free(output_fd);
+        free(err_fd);
     }
     return val_retour;
 } 
