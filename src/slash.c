@@ -323,7 +323,7 @@ int main(int argc, char ** argv) {
                         dup2(pipeTab[i][1],1);
                         close(pipeTab[i][1]);
                     }
-                    // char ** buff = star(cmdList -> cList[i] -> argc,cmdList -> cList[i] -> args);
+            char ** buff = star(cmdList -> cList[i] -> argc,cmdList -> cList[i] -> args);
                     if(strcmp(cmdList->cList[i]->cmd, "pwd") == 0) {
                         val_retour = pwd(cmdList->cList[i]->argc, cmdList->cList[i]->args, output_fd);
                         free(input_fd);
@@ -336,7 +336,7 @@ int main(int argc, char ** argv) {
                         dup2(*input_fd, STDIN_FILENO);
                         dup2(*output_fd, STDOUT_FILENO);
                         dup2(*err_fd, STDERR_FILENO);
-                        execvp(cmdList -> cList[i] -> cmd,cmdList -> cList[i] -> args);
+                        execvp(cmdList -> cList[i] -> cmd,buff);
                         printf("%sCommande inexistante%s\n",ROUGE,BLANC);
                         freePipes(pipeTab,cmdList -> nbCmd);
                         free_commande_list(cmdList);
