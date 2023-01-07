@@ -57,9 +57,11 @@ int isFormat(char * str, char * regEx) {
     while ( idxStr >= 0 && idxReg >= 0 ) {
         // printf("char str = %c char regEx = %c \n",str[idxStr],regEx[idxReg]);
         if (tmp[idxReg] == '*') {
+            free(tmp);
             return 1;
         }
         if (str[idxStr] != tmp[idxReg] ) {
+            free(tmp);
             return 0;
         }
         else {
@@ -68,6 +70,7 @@ int isFormat(char * str, char * regEx) {
         }
     }
     if(idxReg == 0 && tmp[0] == '*') {
+        free(tmp);
         return 1;
     }
     free(tmp);

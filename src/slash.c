@@ -285,6 +285,9 @@ int main(int argc, char ** argv) {
         *err_fd = STDERR_FILENO;
         sig_hand();
         for (int i = 0; i < cmdList -> nbCmd; i++) {
+        char ** buff = star(cmdList -> cList[i] -> argc,cmdList -> cList[i] -> args);
+        free(cmdList -> cList[i] -> args);
+        cmdList -> cList[i] -> args = buff;
             if (cmdList -> cList[i] -> argc > 2){
                 val_retour = redirect(input_fd, output_fd, err_fd, cmdList -> cList[i]);
                 if (val_retour == 1){
@@ -323,7 +326,6 @@ int main(int argc, char ** argv) {
                         dup2(pipeTab[i][1],1);
                         close(pipeTab[i][1]);
                     }
-            char ** buff = star(cmdList -> cList[i] -> argc,cmdList -> cList[i] -> args);
                     if(strcmp(cmdList->cList[i]->cmd, "pwd") == 0) {
                         val_retour = pwd(cmdList->cList[i]->argc, cmdList->cList[i]->args, output_fd);
                         free(input_fd);
