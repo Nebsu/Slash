@@ -7,11 +7,7 @@
 
 int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
     for (int i = 0; i < cmd -> argc; i++) {
-        if (strcmp(cmd -> args[i], "<") == 0) {
-            if (*input_fd != 0) {
-                perror("Erreur de redirection");
-                return 1;
-            }
+        if (strcmp(cmd -> args[i], "<") == 0 && *input_fd == 0) {
             *input_fd = open(cmd -> args[i + 1], O_RDONLY);
             if (*input_fd == -1) {
                 perror("open");
@@ -26,11 +22,6 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
                 i--;
 
         }else if (strcmp(cmd -> args[i], ">") == 0) {
-
-            if (*output_fd != 1) {
-                perror("Erreur de redirection");
-                return 1;
-            }
             *output_fd = open(cmd -> args[i + 1], O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0664);
             if (*output_fd == -1) {
                 perror("open");
@@ -44,10 +35,6 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
             i--;
 
         }else if (strcmp(cmd -> args[i], ">>") == 0) {
-            if (*output_fd != 1) {
-                perror("Erreur de redirection");
-                return 1;
-            }
             *output_fd = open(cmd -> args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0664);
             if (*output_fd == -1) {
                 perror("open");
@@ -61,10 +48,6 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
             i--;
 
         }else if (strcmp(cmd -> args[i], ">|") == 0) {
-            if (*output_fd != 1) {
-                perror("Erreur de redirection");
-                return 1;
-            }
             *output_fd = open(cmd -> args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0664);
             if (*output_fd == -1) {
                 perror("open");
@@ -78,11 +61,6 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
             i--;
 
         }else if (strcmp(cmd -> args[i], "2>") == 0) {
-
-            if (*err_fd != 2) {
-                perror("Erreur de redirection");
-                return 1;
-            }
             *err_fd = open(cmd -> args[i + 1], O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0664);
             if (*err_fd == -1) {
                 perror("open");
@@ -96,11 +74,6 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
             i--;
 
         }else if (strcmp(cmd -> args[i], "2>>") == 0) {
-
-            if (*err_fd != 2) {
-                perror("Erreur de redirection");
-                return 1;
-            }
             *err_fd = open(cmd -> args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0664);
             if (*err_fd == -1) {
                 perror("open");
@@ -114,11 +87,6 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
             i--;
 
         }else if (strcmp(cmd -> args[i], "2>|") == 0) {
-
-            if (*err_fd != 2) {
-                perror("Erreur de redirection");
-                return 1;
-            }
             *err_fd = open(cmd -> args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0664);
             if (*err_fd == -1) {
                 perror("open");

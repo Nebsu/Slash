@@ -293,7 +293,7 @@ int main(int argc, char ** argv) {
                 if (val_retour == 1){
                     goto end;
                 }
-            } 
+            }
             if (strcmp(cmdList->cList[i]->cmd, "exit") == 0) {
                 if(cmdList->cList[i]->argc > 2) {
                     printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
@@ -323,7 +323,7 @@ int main(int argc, char ** argv) {
                     case 0 :
                     if(i < cmdList -> nbCmd - 1 ){
                         close(pipeTab[i][0]);
-                        dup2(pipeTab[i][1],1);
+                        dup2(pipeTab[i][1],*output_fd);
                         close(pipeTab[i][1]);
                     }
                     if(strcmp(cmdList->cList[i]->cmd, "pwd") == 0) {
@@ -350,7 +350,7 @@ int main(int argc, char ** argv) {
                     if(sigIntercept ==0 ) val_retour = WEXITSTATUS(n);
                     end:
                     close(pipeTab[i][1]);
-                    dup2(pipeTab[i][0],0);
+                    dup2(pipeTab[i][0],*input_fd);
                     close(pipeTab[i][0]);
                 }
             }
