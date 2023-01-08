@@ -20,48 +20,13 @@
 #include "cd.h"
 #include "star.h"
 #include "redirection.h"
+#include "util.h"
 
 static char *line = (char *)NULL;
 int val_retour = 0;
 char * buffer = NULL;
 char deuxChar [2];
 int sigIntercept = 0;
-
-void nb_mots(char *str, commande * cmd) {
-    int i = 0;
-    int nb = 0;
-    bool space = true;
-    while (str[i] != '\0' && str[i] != '|') {
-        if (str[i] == ' ') {
-            space = true;
-        }
-        else {
-            if (space) {
-                nb++;
-            }
-            if(str[i] == '-'){
-                cmd->option++;
-            }
-            space = false;
-        }
-        strncpy(deuxChar,str + i,2);
-        if (strcmp(deuxChar,">|") == 0) {
-            i+=2; continue;
-        }
-        i++;
-    }
-    cmd -> argc = nb;
-}
-
-int nbChar(char * buffer,char c) {
-    int i = 0;
-    int acc = 0;
-    while(buffer[i] != '\0') {
-        if (buffer[i] == c) acc++;
-        i++;
-    }
-    return acc;
-}
 
 int nbPipes(char * buffer) {
     int i = 0;
@@ -99,7 +64,6 @@ void freePipes(int ** pipeTab,int n) {
     free(pipeTab);
 }
 
-
 commande * getCommand(char * buffer) {
     commande * cmd;
     if((cmd = malloc(sizeof(commande))) == NULL) {
@@ -120,7 +84,6 @@ commande * getCommand(char * buffer) {
     while (buffer[i] != '\0') {
         if (buffer[i] == ' ' || buffer[i] == '|') {
             if (buffer[i] == '|' && buffer[i + 2] == '|') {
-                dprintf(2,"Erreur de syntaxe\n");
                 return NULL;
             }
             if (j != 0) {
@@ -188,7 +151,8 @@ commandeListe * getCommandList(char * buffer) {
             if (i < len - 2) {
                 strncpy(deuxChar,buffer + i,2);
                 if (strcmp(deuxChar,">|") == 0) {
-                    i+=2; continue;
+                    i+=2; 
+                    continue;
                 }
             }
             i++;
@@ -286,6 +250,7 @@ int main(int argc, char ** argv) {
         if(cmdList == NULL) {
             free(line);
             val_retour = 2;
+            dprintf(2,"Erreur de syntaxe\n");
             continue;
         }
         int ** pipeTab = createPipes(cmdList -> nbCmd);
