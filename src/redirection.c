@@ -5,6 +5,11 @@
 #include <string.h>
 #include "redirection.h"
 
+
+/* 
+   Cette fonction permet de rediriger les descripteurs selon la redirection 
+   et modifie la commande sans les éléments de redirection
+*/
 int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
     for (int i = 0; i < cmd -> argc; i++) {
         if (strcmp(cmd -> args[i], "<") == 0 && *input_fd == 0) {
@@ -22,6 +27,10 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
                 i--;
 
         }else if (strcmp(cmd -> args[i], ">") == 0) {
+            if (cmd -> args[i + 1] == NULL || cmd -> args[i + 1][0] == '|') {
+                dprintf(2,"Erreur de syntaxe : '>' doit être suivi d'un nom de fichier\n");
+                return 1;
+            };
             *output_fd = open(cmd -> args[i + 1], O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0664);
             if (*output_fd == -1) {
                 perror("open");

@@ -119,6 +119,10 @@ commande * getCommand(char * buffer) {
     int k = 0;
     while (buffer[i] != '\0') {
         if (buffer[i] == ' ' || buffer[i] == '|') {
+            if (buffer[i] == '|' && buffer[i + 2] == '|') {
+                dprintf(2,"Erreur de syntaxe\n");
+                return NULL;
+            }
             if (j != 0) {
                 cmd->args[k] = malloc(sizeof(char) * (j + 1));
                 if(cmd->args[k] == NULL) {
@@ -177,6 +181,9 @@ commandeListe * getCommandList(char * buffer) {
     int len = strlen(buffer);
     for (int i = 0;i < len;i++) {
         cmdList -> cList[index++] = getCommand(buffer + i);
+        if(cmdList -> cList[index-1] == NULL) {
+            return NULL;
+        }
         while (i < len && buffer[i] != '|') {
             if (i < len - 2) {
                 strncpy(deuxChar,buffer + i,2);
@@ -233,7 +240,7 @@ char * promptFormat() {
 void handle() {
     sigIntercept = 1;
     val_retour = 255;
-    printf("val ret = %d \n",val_retour);
+    dprintf(2,"Complété");
 }
 
 void sig_ign() {
@@ -276,6 +283,11 @@ int main(int argc, char ** argv) {
         add_history (line);
         free(buffer);
         commandeListe * cmdList = getCommandList(line);
+        if(cmdList == NULL) {
+            free(line);
+            val_retour = 2;
+            continue;
+        }
         int ** pipeTab = createPipes(cmdList -> nbCmd);
         int * input_fd = malloc(sizeof(int));
         *input_fd = STDIN_FILENO;
@@ -306,6 +318,9 @@ int main(int argc, char ** argv) {
                 freePipes(pipeTab,cmdList -> nbCmd);
                 free_commande_list(cmdList);
                 free(line);
+                free(input_fd);
+                free(output_fd);
+                free(err_fd);
                 exit(val_retour);
             }
              else if(strcmp(cmdList->cList[i]->cmd, "cd") == 0) {
@@ -338,8 +353,11 @@ int main(int argc, char ** argv) {
                         dup2(*input_fd, STDIN_FILENO);
                         dup2(*output_fd, STDOUT_FILENO);
                         dup2(*err_fd, STDERR_FILENO);
+                        free(input_fd);
+                        free(output_fd);
+                        free(err_fd);
                         execvp(cmdList -> cList[i] -> cmd,buff);
-                        printf("%sCommande inexistante%s\n",ROUGE,BLANC);
+                        dprintf(2,"%sCommande inexistante%s\n",ROUGE, BLANC);
                         freePipes(pipeTab,cmdList -> nbCmd);
                         free_commande_list(cmdList);
                         return 127;
