@@ -18,9 +18,6 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
                 perror("open");
                 return 1;
             }
-            //Recréation de la commande avant la redirection
-
-
         }else if (strcmp(cmd -> args[i], ">") == 0) {
             if (cmd -> args[i + 1] == NULL || cmd -> args[i + 1][0] == '|') {
                 dprintf(2,"Erreur de syntaxe : '>' doit être suivi d'un nom de fichier\n");

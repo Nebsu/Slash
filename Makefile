@@ -4,8 +4,8 @@ LINK ?= -lreadline
 
 all: slash
 
-slash: slash.o commande.o cd.o pwd.o star.o redirection.o util.o
-	$(CC) $(CCFLAGS) src/slash.c bin/commande.o bin/pwd.o bin/cd.o bin/star.o bin/redirection.o bin/util.o -o slash $(LINK)
+slash: slash.o commande.o cd.o pwd.o star.o redirection.o util.o pipe.o
+	$(CC) $(CCFLAGS) src/slash.c bin/commande.o bin/pwd.o bin/cd.o bin/star.o bin/redirection.o bin/util.o bin/pipe.o -o slash $(LINK)
 
 slash.o: src/slash.c 
 	$(CC) -c -o bin/slash.o src/slash.c  $(LINK) $(CCFLAGS)
@@ -27,6 +27,9 @@ redirection.o: src/redirection.c src/redirection.h
 
 util.o: src/util.c src/util.h
 	$(CC) $(CCFLAGS) -c -o bin/util.o src/util.c
+
+pipe.o: src/pipe.c src/pipe.h
+	$(CC) $(CCFLAGS) -c -o bin/pipe.o src/pipe.c
 
 clean:
 	rm -f bin/* slash
