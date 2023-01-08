@@ -180,27 +180,77 @@ int getFiles(char * path, char ** buf, char * regEx, int i, int doubleEtoile) {
                     free(newPath);
                     free(newRegEx);
                 }
-                else if (((ent->d_type == DT_REG) && !dirNeed(regEx)) || (ent->d_type == DT_DIR || ent->d_type == DT_LNK) && (traitementAsFile(regEx))) {
-                    if(strlen(path) == 1 && path[0] == '.') {
-                        buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 1);
-                    }
-                    else if (strlen(path) == 2 && path[0] == '.' && path[1] == '/') {
-                        buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 3);
-                        strcpy(buf[i],"./");
+                else if (((ent->d_type == DT_REG) && !dirNeed(regEx)) || ((ent->d_type == DT_DIR || ent->d_type == DT_LNK) && (traitementAsFile(regEx)))) {
+                    if(doubleEtoile) {
+                        if(strchr(regEx,'/') != NULL) {
+
+                            if(strcmp(path,".") == 0) {
+                                buf[i] = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
+                                strcpy(buf[i],ent->d_name);
+                            }
+                            else {
+                                buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
+                                strcpy(buf[i],path);
+                                strcat(buf[i],"/");
+                                strcat(buf[i],ent->d_name);
+                            }
+                            strcat(buf[i],"/");
+                            i++;
+
+
+
+                            if(strcmp(path,".") != 0) {
+                                char * newPath = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 3));
+                                strcpy(newPath,path);
+                                strcat(newPath,"/");
+                                strcpy(newPath,ent->d_name);
+                                i = getFiles(newPath,buf,regEx,i,doubleEtoile);
+                                free(newPath);
+                            }
+                            else {
+                                char * newPath = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
+                                strcpy(newPath,ent->d_name);
+                                i = getFiles(newPath,buf,regEx,i,doubleEtoile);
+                                free(newPath);
+                                printf("newPath : %s regEx : %s name = %s\n",newPath,regEx, ent->d_name);
+                            }
+                        }
+                        else if(strchr(regEx,'/') == NULL) {
+                            if(strcmp(path,".") == 0) {
+                                buf[i] = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
+                                strcpy(buf[i],ent->d_name);
+                            }
+                            else {
+                                buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
+                                strcpy(buf[i],path);
+                                strcat(buf[i],"/");
+                                strcat(buf[i],ent->d_name);
+                            }
+                            i++;
+                        }
                     }
                     else {
-                        if(path[strlen(path)-1] == '/') {
-                            buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 1);
-                            strcpy(buf[i],path);
+                        if(strlen(path) == 1 && path[0] == '.') {
+                            buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 1);
+                        }
+                        else if (strlen(path) == 2 && path[0] == '.' && path[1] == '/') {
+                            buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 3);
+                            strcpy(buf[i],"./");
                         }
                         else {
-                            buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 2);
-                            strcpy(buf[i],path);
-                            strcat(buf[i],"/");
+                            if(path[strlen(path)-1] == '/') {
+                                buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 1);
+                                strcpy(buf[i],path);
+                            }
+                            else {
+                                buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 2);
+                                strcpy(buf[i],path);
+                                strcat(buf[i],"/");
+                            }
                         }
+                        strcat(buf[i],ent->d_name);
+                        i++;
                     }
-                    strcat(buf[i],ent->d_name);
-                    i++;
                 }
             }
         }
