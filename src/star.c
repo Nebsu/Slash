@@ -40,12 +40,11 @@ void nettoyageSlash(char * regEx){
 int isFormat(char * str, char * regEx) {
 
     //recupérer le repertoire le plus a gauche de str et le stocker dans un char * tmp
-    char * tmp = malloc(sizeof(char) * strlen(str) + 1);
+    char * tmp = malloc(sizeof(char) * strlen(str) + 2);
     int i = 0;
     while (regEx[i] != '/' && regEx[i] != '\0') {
         i++;
     }
-
     strncpy(tmp, regEx, i);
     tmp[i] = '\0';
     int strLen = strlen(str);
@@ -269,10 +268,11 @@ char** star(int argc, char ** argv) {
         if(strchr(argv[i], '*') != NULL) {
             nettoyageSlash(argv[i]);
             char **tmp = cut(argv[i]);
-            free(argv[i]);
             char * path = tmp[0];
             char * regEx = tmp[1];
+            int doubleEtoile = 0;
             int tmp2 = getFiles(path,buf,regEx,j,strstr(argv[i],"**") != NULL);
+            free(argv[i]);
             free(tmp[0]);
             free(tmp[1]);
             free(tmp);
