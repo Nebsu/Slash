@@ -46,7 +46,6 @@ commande * getCommand(char * buffer) {
         exit(EXIT_FAILURE);
     }
     cmd->args[cmd -> argc] = NULL;
-    // cmd->argc = mot;
     int i = 0;
     int j = 0;
     int k = 0;

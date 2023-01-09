@@ -40,11 +40,11 @@ void nettoyageSlash(char * regEx){
 int isFormat(char * str, char * regEx) {
     // printf("isFormat : %s %s\n", str, regEx);
     //recupérer le repertoire le plus a gauche de str et le stocker dans un char * tmp
-    char * tmp = malloc(sizeof(char) * strlen(str) + 2);
     int i = 0;
     while (regEx[i] != '/' && regEx[i] != '\0') {
         i++;
     }
+    char * tmp = malloc(i + 1);
     strncpy(tmp, regEx, i);
     tmp[i] = '\0';
     int strLen = strlen(str);
@@ -157,7 +157,9 @@ int getFiles(char * path, char ** buf, char * regEx, int i, int doubleEtoile) {
     DIR * dir;
     struct dirent * ent;
     if ((dir = opendir(path)) != NULL) {
+        
         while ((ent = readdir(dir)) != NULL) {
+
             troisChar[3] = '\0';
             deuxChar2[2] = '\0';
             strncpy(troisChar,regEx,3);
@@ -308,9 +310,9 @@ int getFiles(char * path, char ** buf, char * regEx, int i, int doubleEtoile) {
 
 char** star(int argc, char ** argv) {
     char ** buf = malloc(sizeof(char *) * 4096);
-    buf[0] = argv[0];
-    int j = 1;
-    for(int i = 1; i < argc; i++) {
+    // buf[0] = argv[0];
+    int j = 0;
+    for(int i = 0; i < argc; i++) {
         if(strchr(argv[i], '*') != NULL) {
             nettoyageSlash(argv[i]);
             char **tmp = cut(argv[i]);
@@ -318,22 +320,29 @@ char** star(int argc, char ** argv) {
             char * regEx = tmp[1];
             int tmp2 = getFiles(path,buf,regEx,j,strstr(argv[i],"**") != NULL);
             if(tmp2 == j) {
-                buf[j] = argv[i];
+                buf[j] = malloc(sizeof(char *) + 1);
+                strcpy(buf[j],argv[i]);
                 j++;
             }
             else {
                 j = tmp2;
             }
-            // free(argv[i]);
             free(tmp[0]);
             free(tmp[1]);
             free(tmp);
         }
         else {
-            buf[j++] = argv[i];
+            buf[j] = malloc(strlen(argv[i])+ 1);
+            strcpy(buf[j],argv[i]);
+            // buf[j]+= '\0';
+            j++;
         }
+            free(argv[i]);
     }
     buf[j] = NULL;
+    // for (int x = 0; x < j; x++) {
+    //     printf("j =  %d arg %s \n",x,buf[0]);
+    // }
     nbc = j;
     return buf;
 }
