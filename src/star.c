@@ -149,7 +149,52 @@ int getFiles(char * path, char ** buf, char * regEx, int i, int doubleEtoile) {
             strncpy(deuxChar2,regEx,2);
             if(ent->d_name[0] == '.' && !strcmp(troisChar,"../") == 0 && !strcmp(deuxChar2,"./") == 0 )continue;
             if(isFormat(ent->d_name,regEx)) {
-                if((ent->d_type == DT_DIR || ent->d_type == DT_LNK) && (!traitementAsFile(regEx))) {
+                if(doubleEtoile && (((ent->d_type == DT_REG) && !dirNeed(regEx)) || ((ent->d_type == DT_DIR || ent->d_type == DT_LNK) && (traitementAsFile(regEx))))) {
+                    if(strchr(regEx,'/') != NULL) {
+                        if(strcmp(path,".") == 0) {
+                            buf[i] = malloc(sizeof(char) * (strlen(ent->d_name) + 2));
+                            strcpy(buf[i],ent->d_name);
+                        }
+                        else {
+                            buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 3));
+                            strcpy(buf[i],path);
+                            strcat(buf[i],"/");
+                            strcat(buf[i],ent->d_name);
+                        }
+                        strcat(buf[i],"/");
+                        i++;
+                        if(strcmp(path,".") == 0) {
+                            //TODO
+                            //faire le cas ou on doit cut le regex
+                            char * newPath = ent->d_name;
+                            i = getFiles(newPath,buf,regEx,i,doubleEtoile);
+                        }
+                        else {
+                            //TODO
+                            //faire le cas ou on doit cut le regex
+                            char * newPath = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
+                            strcpy(newPath,path);
+                            strcat(newPath,"/");
+                            strcat(newPath,ent->d_name);
+                            i = getFiles(newPath,buf,regEx,i,doubleEtoile);
+                            free(newPath);
+                        }
+                    }
+                    else if(strchr(regEx,'/') == NULL) {
+                        if(strcmp(path,".") == 0) {
+                            buf[i] = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
+                            strcpy(buf[i],ent->d_name);
+                        }
+                        else {
+                            buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
+                            strcpy(buf[i],path);
+                            strcat(buf[i],"/");
+                            strcat(buf[i],ent->d_name);
+                        }
+                        i++;
+                    }
+                }
+                else if((ent->d_type == DT_DIR || ent->d_type == DT_LNK) && (!traitementAsFile(regEx))) {
                     char * newPath;
                     if(strlen(path) > 1 &&((path[strlen(path) - 2] == '.' && path[strlen(path) - 1] == '.') || (path[strlen(path) - 2] == '.' && path[strlen(path) - 1] == '/'))) {
                         newPath = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
@@ -181,81 +226,31 @@ int getFiles(char * path, char ** buf, char * regEx, int i, int doubleEtoile) {
                     free(newRegEx);
                 }
                 else if (((ent->d_type == DT_REG) && !dirNeed(regEx)) || ((ent->d_type == DT_DIR || ent->d_type == DT_LNK) && (traitementAsFile(regEx)))) {
-                    if(doubleEtoile) {
-                        if(strchr(regEx,'/') != NULL) {
-
-                            if(strcmp(path,".") == 0) {
-                                buf[i] = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
-                                strcpy(buf[i],ent->d_name);
-                            }
-                            else {
-                                buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
-                                strcpy(buf[i],path);
-                                strcat(buf[i],"/");
-                                strcat(buf[i],ent->d_name);
-                            }
-                            strcat(buf[i],"/");
-                            i++;
-
-
-
-                            if(strcmp(path,".") != 0) {
-                                char * newPath = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 3));
-                                strcpy(newPath,path);
-                                strcat(newPath,"/");
-                                strcpy(newPath,ent->d_name);
-                                i = getFiles(newPath,buf,regEx,i,doubleEtoile);
-                                free(newPath);
-                            }
-                            else {
-                                char * newPath = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
-                                strcpy(newPath,ent->d_name);
-                                i = getFiles(newPath,buf,regEx,i,doubleEtoile);
-                                free(newPath);
-                                printf("newPath : %s regEx : %s name = %s\n",newPath,regEx, ent->d_name);
-                            }
-                        }
-                        else if(strchr(regEx,'/') == NULL) {
-                            if(strcmp(path,".") == 0) {
-                                buf[i] = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
-                                strcpy(buf[i],ent->d_name);
-                            }
-                            else {
-                                buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
-                                strcpy(buf[i],path);
-                                strcat(buf[i],"/");
-                                strcat(buf[i],ent->d_name);
-                            }
-                            i++;
-                        }
+                    if(strlen(path) == 1 && path[0] == '.') {
+                        buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 1);
+                    }
+                    else if (strlen(path) == 2 && path[0] == '.' && path[1] == '/') {
+                        buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 3);
+                        strcpy(buf[i],"./");
                     }
                     else {
-                        if(strlen(path) == 1 && path[0] == '.') {
-                            buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 1);
-                        }
-                        else if (strlen(path) == 2 && path[0] == '.' && path[1] == '/') {
-                            buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 3);
-                            strcpy(buf[i],"./");
+                        if(path[strlen(path)-1] == '/') {
+                            buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 1);
+                            strcpy(buf[i],path);
                         }
                         else {
-                            if(path[strlen(path)-1] == '/') {
-                                buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 1);
-                                strcpy(buf[i],path);
-                            }
-                            else {
-                                buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 2);
-                                strcpy(buf[i],path);
-                                strcat(buf[i],"/");
-                            }
+                            buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 2);
+                            strcpy(buf[i],path);
+                            strcat(buf[i],"/");
                         }
-                        strcat(buf[i],ent->d_name);
-                        i++;
                     }
+                    strcat(buf[i],ent->d_name);
+                    i++;
                 }
             }
         }
         closedir(dir);
-    } 
+    }
     buf[i] = NULL;
     return i;
 }
