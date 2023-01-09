@@ -15,6 +15,7 @@
 #include "star.h"
 #include "cd.h"
 
+int nbc = 0;
 
 int dirNeed(char * regEx){
     int i = 0;
@@ -39,7 +40,7 @@ void nettoyageSlash(char * regEx){
 int isFormat(char * str, char * regEx) {
 
     //recupérer le repertoire le plus a gauche de str et le stocker dans un char * tmp
-    char * tmp = malloc(sizeof(char) * strlen(str));
+    char * tmp = malloc(sizeof(char) * strlen(str) + 1);
     int i = 0;
     while (regEx[i] != '/' && regEx[i] != '\0') {
         i++;
@@ -268,9 +269,13 @@ char** star(int argc, char ** argv) {
         if(strchr(argv[i], '*') != NULL) {
             nettoyageSlash(argv[i]);
             char **tmp = cut(argv[i]);
+            free(argv[i]);
             char * path = tmp[0];
             char * regEx = tmp[1];
             int tmp2 = getFiles(path,buf,regEx,j,strstr(argv[i],"**") != NULL);
+            free(tmp[0]);
+            free(tmp[1]);
+            free(tmp);
             if(tmp2 == j) {
                 buf[j] = argv[i];
                 j++;
@@ -284,6 +289,7 @@ char** star(int argc, char ** argv) {
         }
     }
     buf[j] = NULL;
+    nbc = j;
     return buf;
 }
 

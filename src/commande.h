@@ -1,6 +1,8 @@
 #ifndef COMMANDE_H
 #define COMMANDE_H
 
+extern int nbc;
+
 typedef struct commande {
     char *cmd;
     char **args;
