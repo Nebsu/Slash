@@ -38,7 +38,7 @@ void nettoyageSlash(char * regEx){
 
 
 int isFormat(char * str, char * regEx) {
-
+    // printf("isFormat : %s %s\n", str, regEx);
     //recupérer le repertoire le plus a gauche de str et le stocker dans un char * tmp
     char * tmp = malloc(sizeof(char) * strlen(str) + 2);
     int i = 0;
@@ -111,6 +111,23 @@ char** cut(char * path) {
 }
 
 char * cutRegEx(char * regEx) {
+    if((strchr(regEx,'/') == NULL) || ((strchr(regEx,'/') != NULL) && strlen(strchr(regEx,'/')) == 1)) {
+        // printf("1\n");
+        char * res = malloc(sizeof(char) * strlen(regEx) + 1);
+        strcpy(res,regEx);
+        return res;
+    }
+    if(strstr(regEx, "**") != NULL) {
+        // printf("2\n");
+        char * res = calloc(strlen(regEx) + 1, sizeof(char));
+        strncat(res, regEx, 3);
+        int i = 3;
+        while(regEx[i] != '/') {
+            i++;
+        }
+        strncat(res, regEx + i, strlen(regEx) - i);
+        return res;
+    }
     int i = 0;
     while(i < strlen(regEx) && regEx[i] != '/') {
         i++;
@@ -126,10 +143,7 @@ int traitementAsFile(char * regEx) {
     while(i < strlen(regEx) && regEx[i] != '/') {
         i++;
     }
-    if(i == strlen(regEx)) {
-        return 1;
-    }
-    if(i == strlen(regEx) - 1 && regEx[i] == '/') {
+    if(i == strlen(regEx) || (i == strlen(regEx) - 1 && regEx[i] == '/')) {
         return 1;
     }
     return 0;
@@ -139,6 +153,7 @@ char troisChar[4];
 char deuxChar2[3];
 
 int getFiles(char * path, char ** buf, char * regEx, int i, int doubleEtoile) {
+    // printf("appel path %s , regEx %s \n",path,regEx);
     DIR * dir;
     struct dirent * ent;
     if ((dir = opendir(path)) != NULL) {
@@ -148,36 +163,69 @@ int getFiles(char * path, char ** buf, char * regEx, int i, int doubleEtoile) {
             strncpy(troisChar,regEx,3);
             strncpy(deuxChar2,regEx,2);
             if(ent->d_name[0] == '.' && !strcmp(troisChar,"../") == 0 && !strcmp(deuxChar2,"./") == 0 )continue;
-            if(isFormat(ent->d_name,regEx)) {
-                if(doubleEtoile && (((ent->d_type == DT_REG) && !dirNeed(regEx)) || ((ent->d_type == DT_DIR || ent->d_type == DT_LNK) && (traitementAsFile(regEx))))) {
+            // printf("name : %s regEx = %s path = %s\n",ent->d_name,regEx,path);
+            if(isFormat(ent->d_name,regEx) || (doubleEtoile && ((ent->d_type == DT_DIR || ent->d_type == DT_LNK)))) {
+                if(doubleEtoile && (((ent->d_type == DT_REG) && !dirNeed(regEx)) || ((ent->d_type == DT_DIR || ent->d_type == DT_LNK) && dirNeed(regEx)))) {
+                    // printf("name : %s regEx = %s path = %s cmp = %d\n",ent->d_name,regEx,path,strcmp(regEx,"**/") == 0);
                     if(strchr(regEx,'/') != NULL) {
-                        if(strcmp(path,".") == 0) {
-                            buf[i] = malloc(sizeof(char) * (strlen(ent->d_name) + 2));
-                            strcpy(buf[i],ent->d_name);
-                        }
-                        else {
-                            buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 3));
-                            strcpy(buf[i],path);
+                        if(strcmp(regEx,"**/") == 0) {
+                            if(strcmp(path,".") == 0) {
+                                buf[i] = malloc(sizeof(char) * (strlen(ent->d_name) + 2));
+                                strcpy(buf[i],ent->d_name);
+                            }
+                            else {
+                                buf[i] = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 3));
+                                strcpy(buf[i],path);
+                                strcat(buf[i],"/");
+                                strcat(buf[i],ent->d_name);
+                            }
                             strcat(buf[i],"/");
-                            strcat(buf[i],ent->d_name);
-                        }
-                        strcat(buf[i],"/");
-                        i++;
-                        if(strcmp(path,".") == 0) {
-                            //TODO
-                            //faire le cas ou on doit cut le regex
-                            char * newPath = ent->d_name;
-                            i = getFiles(newPath,buf,regEx,i,doubleEtoile);
+                            i++;
+                            if(strcmp(path,".") == 0) {
+                                char * newPath = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
+                                strcpy(newPath,ent->d_name);
+                                char * newRegEx = cutRegEx(regEx);
+                                // printf("newPath = %s newRegEx = %s\n",newPath,newRegEx);
+                                i = getFiles(newPath,buf,newRegEx,i,doubleEtoile);
+                                free(newRegEx);
+                            }
+                            else {
+                                char * newPath = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
+                                strcpy(newPath,path);
+                                strcat(newPath,"/");
+                                strcat(newPath,ent->d_name);
+                                char * newRegEx = cutRegEx(regEx);
+                                // printf("newPath = %s newRegEx = %s\n",newPath,newRegEx);
+                                i = getFiles(newPath,buf,newRegEx,i,doubleEtoile);
+                                free(newRegEx);
+                                free(newPath);
+                            }
                         }
                         else {
-                            //TODO
-                            //faire le cas ou on doit cut le regex
-                            char * newPath = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
-                            strcpy(newPath,path);
-                            strcat(newPath,"/");
-                            strcat(newPath,ent->d_name);
-                            i = getFiles(newPath,buf,regEx,i,doubleEtoile);
-                            free(newPath);
+                            // printf("name : %s regEx + 3 = %s path = %s cmp = %d\n",ent->d_name,regEx + 3,path,strcmp(regEx,"**/") == 0);
+                            if(strcmp(path,".") == 0) {
+                                char * newPath = malloc(sizeof(char) * (strlen(ent->d_name) + 1));
+                                strcpy(newPath,ent->d_name);
+                                char * newRegEx = cutRegEx(regEx + 3);
+                                // printf("newPath = %s newRegEx = %s\n",newPath,newRegEx);
+                                i = getFiles(newPath,buf,newRegEx,i,0);
+                                i = getFiles(newPath,buf,regEx,i,doubleEtoile);
+                                free(newRegEx);
+                                free(newPath);
+                            }
+                            else {
+                                // printf("path = \"%s\"\n",path);
+                                char * newPath = malloc(sizeof(char) * (strlen(path) + strlen(ent->d_name) + 2));
+                                strcpy(newPath,path);
+                                strcat(newPath,"/");
+                                strcat(newPath,ent->d_name);
+                                char * newRegEx = cutRegEx(regEx + 3);
+                                // printf("newPath = %s Path = %s newRegEx = %s\n",newPath,path,newRegEx);
+                                i = getFiles(newPath,buf,newRegEx,i,0);
+                                i = getFiles(newPath,buf,regEx,i,doubleEtoile);
+                                free(newRegEx);
+                                free(newPath);
+                            }
                         }
                     }
                     else if(strchr(regEx,'/') == NULL) {
@@ -268,7 +316,6 @@ char** star(int argc, char ** argv) {
             char **tmp = cut(argv[i]);
             char * path = tmp[0];
             char * regEx = tmp[1];
-            int doubleEtoile = 0;
             int tmp2 = getFiles(path,buf,regEx,j,strstr(argv[i],"**") != NULL);
             if(tmp2 == j) {
                 buf[j] = argv[i];
@@ -277,7 +324,7 @@ char** star(int argc, char ** argv) {
             else {
                 j = tmp2;
             }
-            free(argv[i]);
+            // free(argv[i]);
             free(tmp[0]);
             free(tmp[1]);
             free(tmp);
