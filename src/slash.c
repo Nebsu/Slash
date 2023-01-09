@@ -131,7 +131,6 @@ int main(int argc, char ** argv) {
         for (int i = 0; i < cmdList -> nbCmd; i++) {
         char ** buff = star(cmdList -> cList[i] -> argc,cmdList -> cList[i] -> args);
         free(cmdList -> cList[i] -> args);
-        memmove(cmdList -> cList[i],buff,sizeof(buff));
         cmdList -> cList[i] -> argc = nbc;
         cmdList -> cList[i] -> args = buff;
             if (cmdList -> cList[i] -> argc > 2){

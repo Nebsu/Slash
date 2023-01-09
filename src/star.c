@@ -227,7 +227,7 @@ int getFiles(char * path, char ** buf, char * regEx, int i, int doubleEtoile) {
                 }
                 else if (((ent->d_type == DT_REG) && !dirNeed(regEx)) || ((ent->d_type == DT_DIR || ent->d_type == DT_LNK) && (traitementAsFile(regEx)))) {
                     if(strlen(path) == 1 && path[0] == '.') {
-                        buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 1);
+                        buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 2);
                     }
                     else if (strlen(path) == 2 && path[0] == '.' && path[1] == '/') {
                         buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + 3);
@@ -235,16 +235,19 @@ int getFiles(char * path, char ** buf, char * regEx, int i, int doubleEtoile) {
                     }
                     else {
                         if(path[strlen(path)-1] == '/') {
+
                             buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 1);
                             strcpy(buf[i],path);
                         }
                         else {
+
                             buf[i] = malloc(sizeof(char) * strlen(ent->d_name) + strlen(path) + 2);
                             strcpy(buf[i],path);
                             strcat(buf[i],"/");
                         }
                     }
-                    strcat(buf[i],ent->d_name);
+                    if(strlen(path) == 1 && path[0] == '.') strcpy(buf[i],ent -> d_name);
+                    else strcat(buf[i],ent->d_name);
                     i++;
                 }
             }
@@ -267,10 +270,6 @@ char** star(int argc, char ** argv) {
             char * regEx = tmp[1];
             int doubleEtoile = 0;
             int tmp2 = getFiles(path,buf,regEx,j,strstr(argv[i],"**") != NULL);
-            free(argv[i]);
-            free(tmp[0]);
-            free(tmp[1]);
-            free(tmp);
             if(tmp2 == j) {
                 buf[j] = argv[i];
                 j++;
@@ -278,6 +277,10 @@ char** star(int argc, char ** argv) {
             else {
                 j = tmp2;
             }
+            free(argv[i]);
+            free(tmp[0]);
+            free(tmp[1]);
+            free(tmp);
         }
         else {
             buf[j++] = argv[i];
