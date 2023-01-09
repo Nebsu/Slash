@@ -107,6 +107,9 @@ void sig_hand() {
     sigaction(SIGTERM, &s, NULL);
 }
 
+/**
+ * Fonction qui sauvegarde un variable 
+*/
 
 int var_check(char * var) {
     char * egal;
@@ -123,10 +126,17 @@ int var_check(char * var) {
     return 0;
 }
 
+
+/**
+ * Renvoie si le string à la forme d'une variable 
+*/
 int isVar(char * var) {
     return (var[0] == '$');
 }
 
+/**
+ * Remplace la valeur d'une variable par sa valeur
+*/
 char * var_change(char * var) {
     int i = 1;
     while(var[i] != '\0' && isalnum(var[i])) {
