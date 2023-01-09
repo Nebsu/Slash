@@ -15,9 +15,8 @@ char five_chars[5];
 char bufferPoint[PATH_MAX];
 char tmpPath [PATH_MAX];
 
-/**
- *  Fonction qui permet de 
-*/
+char buffer_path [PATH_MAX];
+char tmpEnv [PATH_MAX];
 
 int remove_rep(char *path, int len, int totalLength, int charskipped, int end) {
     int i = len - charskipped;
@@ -80,20 +79,6 @@ char * path_simplificator (char * path,size_t len) {
     return path;
 }
 
-char buffer_path [PATH_MAX];
-char tmpEnv [PATH_MAX];
-
-int f (char * path) {
-    int i = 0;
-    while( path[i] != '\0') {
-        if (path[i] == '/') {
-            return i;
-        }
-        i++;
-    }
-    return i;
-}
-
 char * setDirectory(char * path) {
     if (path[0] == '/') {
         strcpy(tmpEnv,path);
@@ -114,6 +99,10 @@ char * setDirectory(char * path) {
     return tmpEnv;
 }
 
+/**
+ * Fonction principale appliquant le changement de répertoire 
+ * selon les cas;
+*/
 
 int change_dir(char * path,int physical) {
     int d = -1;
@@ -171,7 +160,9 @@ int change_dir(char * path,int physical) {
     return 0;
 }
 
-
+/**
+ * Fonction qui fait office de main 
+*/
 int cd (int argc, char ** argv) {
     switch (argc) {
             case 1 :
