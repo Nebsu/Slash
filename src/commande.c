@@ -7,6 +7,9 @@
 
 char deuxCharCmd[2];
 
+/*
+    Cette fonction libérer la mémoire allouée à la commande en argument
+*/
 void free_commande(commande *cmd) {
     free(cmd->cmd);
     for(int i = 1; i < cmd->argc; i++) {
@@ -16,6 +19,9 @@ void free_commande(commande *cmd) {
     free(cmd);
 }
 
+/*
+    Cette fonction affiche la commande en argument
+*/
 void printCom(commande *cmd) {
     printf("cmd =  %s \n",cmd -> cmd);
     printf("args : ");
@@ -25,6 +31,9 @@ void printCom(commande *cmd) {
     printf("\n");
 }
 
+/*
+    Cette fonction permet de libérer la mémoire allouée pour une liste de commande
+*/
 void free_commande_list(commandeListe * cmdList) {
     for (int i = 0;i < cmdList -> nbCmd; i++) {
         free_commande(cmdList -> cList[i]);
@@ -33,6 +42,10 @@ void free_commande_list(commandeListe * cmdList) {
     free(cmdList);
 }
 
+/* 
+    Cette fonction permet de transformer une chaine de caractère en une commande
+    Elle renvoie la commande si il n'y a pas d'erreur sinon NULL
+*/
 commande * getCommand(char * buffer) {
     commande * cmd;
     if((cmd = malloc(sizeof(commande))) == NULL) {
@@ -93,6 +106,10 @@ commande * getCommand(char * buffer) {
     return cmd;
 }
 
+/*
+    Cette fonction permet de transformer une chaine de caractère en une liste de commande
+    Elle renvoie la liste de commande si il n'y a pas d'erreur sinon NULL
+*/
 commandeListe * getCommandList(char * buffer) {
     int nbPipe = nbPipes(buffer);
     commandeListe *cmdList;

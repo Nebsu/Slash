@@ -28,6 +28,11 @@ int val_retour = 0;
 char * buffer = NULL;
 int sigIntercept = 0;
 
+
+/*
+    Cette fonction permet d'avoir le chemin actuel ainsi que la valeur de retour
+    dans le prompt
+*/
 char * promptFormat() {
     buffer = malloc(MAX_ARGS_STRLEN);
     if(buffer == NULL) {
@@ -55,6 +60,7 @@ char * promptFormat() {
         taille += sprintf(buffer + taille, "...");
     }
 
+    //Ajout la fin du prompt
     if(taille_position < taille_restant) {
         taille_restant = taille_position;
         taille += sprintf(buffer + taille, "%s", position);
@@ -68,12 +74,18 @@ char * promptFormat() {
     return buffer;
 }
 
+/*
+    Réponse aux signaux
+*/
 void handle() {
     sigIntercept = 1;
     val_retour = 255;
     dprintf(2,"Complété");
 }
 
+/*
+    Ignore les signaux SIGINT et SIGQUIT
+*/
 void sig_ign() {
      struct sigaction s = {
         .sa_handler = SIG_IGN
@@ -82,6 +94,9 @@ void sig_ign() {
     sigaction(SIGTERM, &s, NULL);
 }
 
+/*
+    Gestion de signaux SIGINT et SIGTERM
+*/
 void sig_hand() {
     struct sigaction s = {
         .sa_handler = handle
@@ -100,6 +115,9 @@ int main(int argc, char ** argv) {
     while(1) {
         int tmpStdin = dup(STDIN_FILENO);
         int tmpStdout = dup(STDOUT_FILENO);
+        /*
+            Affiche le prompt et récupère la ligne de l'entrée standard
+        */
         line = readline (promptFormat());
         sigIntercept = 0;
         if(line == NULL) {
@@ -113,6 +131,7 @@ int main(int argc, char ** argv) {
         }
         add_history (line);
         free(buffer);
+        // Traitement de la ligne de commande
         commandeListe * cmdList = getCommandList(line);
         if(cmdList == NULL) {
             free(line);
@@ -121,25 +140,43 @@ int main(int argc, char ** argv) {
             continue;
         }
         int ** pipeTab = createPipes(cmdList -> nbCmd);
+        /*
+            Creation des descripteurs de fichiers modifiables
+        */
         int * input_fd = malloc(sizeof(int));
         *input_fd = STDIN_FILENO;
         int * output_fd = malloc(sizeof(int));
         *output_fd = STDOUT_FILENO;
         int * err_fd = malloc(sizeof(int));
         *err_fd = STDERR_FILENO;
+        /*
+            Gestion des signaux
+        */
         sig_hand();
+        /*
+            Execution des commandes
+        */
         for (int i = 0; i < cmdList -> nbCmd; i++) {
-        char ** buff = star(cmdList -> cList[i] -> argc,cmdList -> cList[i] -> args);
-        free(cmdList -> cList[i] -> args);
-        cmdList -> cList[i] -> argc = nbc;
-        cmdList -> cList[i] -> args = buff;
-        cmdList -> cList[i] -> cmd = buff[0];
+            char ** buff = star(cmdList -> cList[i] -> argc,cmdList -> cList[i] -> args);
+            free(cmdList -> cList[i] -> args);
+            /*
+                Recréation de la commande après gestion de l'étoile
+            */
+            cmdList -> cList[i] -> argc = nbc;
+            cmdList -> cList[i] -> args = buff;
+            cmdList -> cList[i] -> cmd = buff[0];
+            /*
+                Gestion des redirections
+            */
             if (cmdList -> cList[i] -> argc > 2){
                 val_retour = redirect(input_fd, output_fd, err_fd, cmdList -> cList[i]);
                 if (val_retour == 1){
                     goto end;
                 }
             }
+            /*
+                Gestion des commandes internes
+            */
             if (strcmp(cmdList->cList[i]->cmd, "exit") == 0) {
                 if(cmdList->cList[i]->argc > 2) {
                     printf("%sTrop d'arguments%s\n",ROUGE,BLANC);
@@ -163,6 +200,9 @@ int main(int argc, char ** argv) {
             else if(strcmp(cmdList->cList[i]->cmd, "false") == 0) {
                 val_retour = 1;
             }
+            /*
+                Gestion des commande externe (et pwd)
+            */
             else {
                 int n;
                 switch (n = fork()) {
@@ -207,6 +247,9 @@ int main(int argc, char ** argv) {
                 }
             }
         }
+        /*
+            Libération de la mémoire
+        */
         free(input_fd);
         free(output_fd);
         free(err_fd);

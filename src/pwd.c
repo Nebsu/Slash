@@ -10,15 +10,25 @@
 #include "pwd.h"
 
 char  buffer_pwd[PATH_MAX];
+
+/*
+    Cette fonction gère l'option -L de pwd
+*/
 void logical_pwd(int * redirfd) {
     dprintf(*redirfd,"%s\n",getenv("PWD"));
 }
 
+/*
+    Cette fonction gère l'option -P de pwd
+*/
 void absolute_pwd(int * redirfd) {
     getcwd(buffer_pwd,PATH_MAX);
     dprintf(*redirfd,"%s\n",buffer_pwd);
 }
 
+/*
+    Cette fonction reproduit la fonction pwd de bash
+*/
 int pwd(int argc, char ** argv, int * redirfd) {
     if (argc > 3) return -1;
     if (argc == 1) logical_pwd(redirfd);
