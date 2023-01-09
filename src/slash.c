@@ -133,6 +133,7 @@ int main(int argc, char ** argv) {
         free(cmdList -> cList[i] -> args);
         cmdList -> cList[i] -> argc = nbc;
         cmdList -> cList[i] -> args = buff;
+        cmdList -> cList[i] -> cmd = buff[0];
             if (cmdList -> cList[i] -> argc > 2){
                 val_retour = redirect(input_fd, output_fd, err_fd, cmdList -> cList[i]);
                 if (val_retour == 1){
@@ -189,7 +190,7 @@ int main(int argc, char ** argv) {
                         free(input_fd);
                         free(output_fd);
                         free(err_fd);
-                        execvp(cmdList -> cList[i] -> cmd,buff);
+                        execvp(cmdList -> cList[i] -> cmd,cmdList -> cList[i] -> args);
                         dprintf(2,"%sCommande inexistante%s\n",ROUGE, BLANC);
                         freePipes(pipeTab,cmdList -> nbCmd);
                         free_commande_list(cmdList);

@@ -63,8 +63,12 @@ int redirect(int * input_fd, int * output_fd, int * err_fd, commande * cmd){
             continue;
         }
         for (int j = i; j < cmd -> argc - 2; j++) {
-            cmd -> args[j] = cmd -> args[j + 2];
+           cmd -> args [j] = realloc(cmd -> args [j],strlen(cmd -> args[j + 2]) + 1);
+            strcpy(cmd -> args [j],cmd -> args[j + 2]);
+            // cmd -> args[j] = cmd -> args[j + 2];
         }
+        free(cmd -> args[cmd -> argc -1 ]);
+        free(cmd -> args[cmd -> argc -2 ]);
         cmd -> argc -= 2;
         cmd -> args[cmd -> argc] = NULL;
         i--;
