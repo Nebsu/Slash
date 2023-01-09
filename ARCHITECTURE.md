@@ -1,5 +1,4 @@
 
-
 # Slash
 
 Notre programme "Slash" permet d'interpréter les commandes comme dans un shell.
@@ -63,3 +62,7 @@ redirection permet de détecter la présence d'une redirection et change la sort
 
 ### pipe
 pipe sert à simuler "|" de bash, qui permet de lancer plusieurs commandes   à la suite sur une même sortie
+
+## Architecture
+
+![Diagramme](/diagramme.png)

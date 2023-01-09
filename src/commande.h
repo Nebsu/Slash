@@ -19,5 +19,7 @@ typedef struct commandeListe {
 void free_commande(commande *cmd);
 void printCom(commande *cmd);
 void free_commande_list(commandeListe * cmdList);
+commande * getCommand(char * buffer);
+commandeListe * getCommandList(char * buffer);
 
 #endif

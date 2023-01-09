@@ -11,6 +11,8 @@
 
 #include "pipe.h"
 
+char deuxCharPipe[2];
+
 int ** createPipes(int n) {
     int **pipeTab = malloc(n*sizeof(int *));
     for (int i = 0;i < n ; i++) {
@@ -28,4 +30,21 @@ void freePipes(int ** pipeTab,int n) {
         free(pipeTab[i]);
     }
     free(pipeTab);
+}
+
+int nbPipes(char * buffer) {
+    int i = 0;
+    int acc = 0;
+    int len = strlen(buffer);
+    while(buffer[i] != '\0') {
+        if (i < len -1) {
+            strncpy(deuxCharPipe,buffer + i,2);
+            if (strcmp(deuxCharPipe,">|") == 0) {
+                i+=2; continue;
+            }
+        }
+        if (buffer[i] == '|') acc++;
+        i++;
+    }
+    return acc; 
 }
