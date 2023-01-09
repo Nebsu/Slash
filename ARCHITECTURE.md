@@ -65,4 +65,4 @@ pipe sert à simuler "|" de bash, qui permet de lancer plusieurs commandes   à 
 
 ## Architecture
 
-![Diagramme](/diagramme.png)
+![Diagramme](/diagramme.jpg)

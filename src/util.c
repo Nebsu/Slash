@@ -5,6 +5,10 @@
 #include "commande.h"
 #include "util.h"
 
+/*
+    Cette fonction permet de compter le nombre de mots dans une chaine de caractères
+    et les ajoute dans argc de cmd
+*/
 void nb_mots(char *str, commande * cmd) {
     int i = 0;
     int nb = 0;
@@ -32,6 +36,11 @@ void nb_mots(char *str, commande * cmd) {
     cmd -> argc = nb;
 }
 
+
+/*
+    Cette fonction permet de compter le nombre d'occurence de c dans buffer
+    Elle renvoie le nombre d'occurence
+*/
 int nbChar(char * buffer,char c) {
     int i = 0;
     int acc = 0;

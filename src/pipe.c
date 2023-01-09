@@ -13,6 +13,10 @@
 
 char deuxCharPipe[2];
 
+/*
+    Cette fonction permet de créer une liste de pipe
+    Elle renvoie la liste de pipe si il n'y a pas d'erreur sinon exit
+*/
 int ** createPipes(int n) {
     int **pipeTab = malloc(n*sizeof(int *));
     for (int i = 0;i < n ; i++) {
@@ -25,6 +29,9 @@ int ** createPipes(int n) {
     return pipeTab;
 }
 
+/*
+    Cette fonction permet de libérer la mémoire allouée pour les pipes
+*/
 void freePipes(int ** pipeTab,int n) {
     for (int i = 0;i < n; i++) {
         free(pipeTab[i]);
@@ -32,6 +39,10 @@ void freePipes(int ** pipeTab,int n) {
     free(pipeTab);
 }
 
+/*
+    Cette fonction permet de compter le nombre de pipe dans une commande
+    Elle renvoie le nombre de pipe
+*/
 int nbPipes(char * buffer) {
     int i = 0;
     int acc = 0;

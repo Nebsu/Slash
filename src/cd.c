@@ -78,9 +78,6 @@ char tmpEnv [PATH_MAX];
 int f (char * path) {
     int i = 0;
     while( path[i] != '\0') {
-        // strncpy(five_chars,path + i,5);
-        // printf("fc = %s \n",five_chars);
-        // printf(" char = %c \n", path[i]);
         if (path[i] == '/') {
             return i;
         }
