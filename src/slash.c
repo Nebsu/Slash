@@ -27,6 +27,8 @@ static char *line = (char *)NULL;
 int val_retour = 0;
 char * buffer = NULL;
 int sigIntercept = 0;
+char buffer_variables[MAX_ARGS_STRLEN];
+int changeVal = 0;
 
 
 /*
@@ -105,6 +107,51 @@ void sig_hand() {
     sigaction(SIGTERM, &s, NULL);
 }
 
+
+int var_check(char * var) {
+    char * egal;
+    if ((egal = strchr(var, '=') ) != NULL) {
+        if (strlen(egal) > 1) {
+            char * val = egal + 1;
+            int lenVar = strlen(var) - strlen(egal);
+            strncpy(buffer_variables,var,lenVar);
+            buffer_variables[lenVar] = '\0';
+            setenv(buffer_variables,val,1);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int isVar(char * var) {
+    return (var[0] == '$');
+}
+
+char * var_change(char * var) {
+    int i = 1;
+    while(var[i] != '\0' && isalnum(var[i])) {
+        i++;
+    }
+    strncpy(buffer_variables,var+1,i-1);
+    buffer_variables[i-1] = '\0';
+    if (getenv(buffer_variables) != NULL) {
+        char * val = getenv(buffer_variables);
+        int len = strlen(val) + strlen(var + i) +1;
+        char * tmpvar = malloc(len);
+        strcpy(tmpvar,val);
+        if(var[i] != '\0') {
+            strcpy(tmpvar,var + i);
+        }
+        strncpy(tmpvar,val,strlen(val));
+        free(var);
+        printf("var = %s \n",tmpvar);
+        return tmpvar;
+    }
+    else {
+        return var;
+    }
+}
+
 int main(int argc, char ** argv) {
     sig_ign();
     if(argc > 1) {
@@ -112,7 +159,9 @@ int main(int argc, char ** argv) {
         return 1;
     }
     rl_outstream = stderr;
+    // loadEnv();
     while(1) {
+        changeVal = 0;
         int tmpStdin = dup(STDIN_FILENO);
         int tmpStdout = dup(STDOUT_FILENO);
         /*
@@ -157,6 +206,18 @@ int main(int argc, char ** argv) {
             Execution des commandes
         */
         for (int i = 0; i < cmdList -> nbCmd; i++) {
+             for (int j = 0; j < cmdList -> cList[i] -> argc; j++){
+                if (isVar(cmdList -> cList[i] -> args[j])) {
+                    cmdList -> cList[i] -> args[j] = var_change(cmdList -> cList[i] -> args[j]);
+                }
+                else {
+                    if(var_check(cmdList -> cList[i] -> args[j])) {
+                        if (i == 0 && j == 0 && cmdList -> cList[i] -> argc == 1 && cmdList -> nbCmd == 1) changeVal = 1;
+                    }
+                    
+                    // if(i == 0 && j == 0 && cmdList -> cList[i] -> argc == 1 && cmdList -> nbCmd == 1 ) changeVal = 1;
+                }
+            }
             char ** buff = star(cmdList -> cList[i] -> argc,cmdList -> cList[i] -> args);
             free(cmdList -> cList[i] -> args);
             /*
@@ -230,11 +291,16 @@ int main(int argc, char ** argv) {
                         free(input_fd);
                         free(output_fd);
                         free(err_fd);
-                        execvp(cmdList -> cList[i] -> cmd,cmdList -> cList[i] -> args);
-                        dprintf(2,"%sCommande inexistante%s\n",ROUGE, BLANC);
+                        if(!changeVal) {
+                            execvp(cmdList -> cList[i] -> cmd,cmdList -> cList[i] -> args);
+                            dprintf(2,"%sCommande inexistante%s\n",ROUGE, BLANC);
+                            freePipes(pipeTab,cmdList -> nbCmd);
+                            free_commande_list(cmdList);
+                            return 127;
+                        }
                         freePipes(pipeTab,cmdList -> nbCmd);
                         free_commande_list(cmdList);
-                        return 127;
+                        return 0;
                     }
                     return val_retour;
                     default :

@@ -15,6 +15,10 @@ char five_chars[5];
 char bufferPoint[PATH_MAX];
 char tmpPath [PATH_MAX];
 
+/**
+ *  Fonction qui permet de 
+*/
+
 int remove_rep(char *path, int len, int totalLength, int charskipped, int end) {
     int i = len - charskipped;
     while(i > 0 && path[i] != '/') {
@@ -32,6 +36,10 @@ int remove_rep(char *path, int len, int totalLength, int charskipped, int end) {
     return len - i ;
 }
 
+/**
+ * Fonction permettant de simplifer l'écriture d'un chemin en retirant et 
+ * en interprétant ses ./ et ../
+*/
 char * path_simplificator (char * path,size_t len) {
     int i = 0;
     int point = 0;
